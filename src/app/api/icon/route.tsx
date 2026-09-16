@@ -1,21 +1,18 @@
 import { ImageResponse } from 'next/og';
- 
-// Route segment config
+import { NextRequest } from 'next/server';
+
 export const runtime = 'edge';
- 
-// Image metadata
-export const size = {
-  width: 512,
-  height: 512,
-};
-export const contentType = 'image/png';
- 
-export default function Icon() {
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const sizeParam = searchParams.get('size') || '192';
+  const size = parseInt(sizeParam, 10);
+
   return new ImageResponse(
     (
       <div
         style={{
-          fontSize: 300,
+          fontSize: size * 0.6,
           background: '#0f172a',
           width: '100%',
           height: '100%',
@@ -23,12 +20,15 @@ export default function Icon() {
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
-          borderRadius: '128px',
+          borderRadius: size * 0.25,
         }}
       >
         🛡️
       </div>
     ),
-    { ...size }
+    {
+      width: size,
+      height: size,
+    }
   );
 }
