@@ -9,7 +9,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "CRM 24hs",
   description: "Sistema de gestión de oportunidades para 24hs Security",
-  manifest: "/manifest.json",
 };
 
 export default async function RootLayout({
