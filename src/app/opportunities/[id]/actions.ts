@@ -110,3 +110,29 @@ export async function moveToTrashAction(opportunityId: string) {
   });
 }
 
+export async function editCustomerAction(opportunityId: string, formData: FormData) {
+  const cookieStore = await cookies();
+  const userId = cookieStore.get('userId')?.value;
+  if (!userId) throw new Error('No autorizado');
+
+  const name = formData.get('name') as string;
+  const phone = formData.get('phone') as string;
+  const productInterest = formData.get('productInterest') as string;
+
+  const opp = await prisma.opportunity.findUnique({ where: { id: opportunityId } });
+  if (!opp) throw new Error('Oportunidad no encontrada');
+
+  await prisma.$transaction(async (tx) => {
+    await tx.customer.update({
+      where: { id: opp.customerId },
+      data: { name, phone }
+    });
+
+    await tx.opportunity.update({
+      where: { id: opportunityId },
+      data: { productInterest }
+    });
+  });
+
+  revalidatePath(`/opportunities/${opportunityId}`);
+}

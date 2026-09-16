@@ -58,7 +58,12 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4 mb-4">
           <div>
-            <h1 className="text-3xl font-black text-slate-900">{opportunity.customer.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-black text-slate-900">{opportunity.customer.name}</h1>
+              <a href={`/opportunities/${opportunity.id}/edit`} className="text-slate-400 hover:text-blue-600 transition-colors" title="Editar información del cliente">
+                ✏️
+              </a>
+            </div>
             <p className="text-slate-600 text-lg flex items-center gap-2 mt-1">
               📱 {opportunity.customer.phone}
             </p>
