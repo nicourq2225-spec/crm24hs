@@ -9,6 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "CRM 24hs",
   description: "Sistema de gestión de oportunidades para 24hs Security",
+  manifest: "/manifest.json",
 };
 
 export default async function RootLayout({
@@ -73,6 +74,17 @@ export default async function RootLayout({
         <main className={`min-h-screen ${userId ? 'md:ml-64' : ''}`}>
           {children}
         </main>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
