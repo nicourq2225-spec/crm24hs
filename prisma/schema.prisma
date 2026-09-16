@@ -1,0 +1,69 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  initials      String
+  role          String   @default("SELLER") // "ADMIN" | "SELLER"
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  opportunities Opportunity[]
+  activityLogs  ActivityLog[]
+}
+
+model Customer {
+  id            String   @id @default(uuid())
+  name          String
+  phone         String
+  origin        String   // "Stand", "WhatsApp", "Instagram", "Referido", "Cliente anterior", "Otro"
+  createdAt     DateTime @default(now())
+  opportunities Opportunity[]
+}
+
+model Opportunity {
+  id               String   @id @default(uuid())
+  customerId       String
+  customer         Customer @relation(fields: [customerId], references: [id])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  
+  productInterest  String   // "Cámara", "Kit de cámaras", "Alarma", "Cerradura", "Videoportero", "Otro"
+  productModel     String?  // "H9C", "H3C", etc
+  
+  budgetValue      Float?
+  paymentMethod    String?  // "Transferencia / efectivo", "Débito", "Crédito", "Cuotas"
+  installments     Int?
+  
+  status           String   @default("Nuevo") // "Nuevo", "Contactar", "Presupuesto enviado", "Seguimiento", "Negociación", "Venta concretada", "Venta perdida"
+  
+  nextFollowUp     DateTime?
+  
+  hasAlarm         String?  // "Sí", "No", "No sabe"
+  alarmOpportunity String?  // "No", "Potencial", "Ofrecer"
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  activityLogs     ActivityLog[]
+}
+
+model ActivityLog {
+  id             String   @id @default(uuid())
+  opportunityId  String
+  opportunity    Opportunity @relation(fields: [opportunityId], references: [id])
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  
+  comment        String
+  previousStatus String
+  newStatus      String
+  
+  createdAt      DateTime @default(now())
+}
