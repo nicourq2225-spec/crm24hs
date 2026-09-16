@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export default async function OpportunitiesPage({
   searchParams,
 }: {
-  searchParams: { filter?: string; q?: string }
+  searchParams: Promise<{ filter?: string; q?: string }>
 }) {
   const cookieStore = await cookies();
   const userId = cookieStore.get('userId')?.value;
