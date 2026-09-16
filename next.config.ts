@@ -1,21 +1,17 @@
 import type { NextConfig } from "next";
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+});
 
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  async rewrites() {
-    return [
-      {
-        source: '/icon-192.png',
-        destination: '/api/icon?size=192',
-      },
-      {
-        source: '/icon-512.png',
-        destination: '/api/icon?size=512',
-      },
-    ]
-  },
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

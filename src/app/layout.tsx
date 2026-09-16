@@ -73,17 +73,6 @@ export default async function RootLayout({
         <main className={`min-h-screen ${userId ? 'md:ml-64' : ''}`}>
           {children}
         </main>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js');
-                });
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   );
