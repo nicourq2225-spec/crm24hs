@@ -139,9 +139,12 @@ export function CommercialAssistant({ opportunity, alarmOpp }: { opportunity: an
         <div className="text-slate-200 font-medium mb-4">{suggestedAction}</div>
         
         <div className="flex flex-col sm:flex-row gap-3">
-          <button className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+          <a 
+            href={`/proposals/${opportunity.id}`}
+            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+          >
             📄 GENERAR PROPUESTA
-          </button>
+          </a>
           
           <a 
             href={`https://wa.me/${phoneFormatted}?text=${wsText}`}
