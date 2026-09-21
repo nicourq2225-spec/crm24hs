@@ -15,6 +15,7 @@ model User {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
   opportunities Opportunity[]
+  alarmOpportunities AlarmOpportunity[]
   activityLogs  ActivityLog[]
 }
 
@@ -22,9 +23,11 @@ model Customer {
   id            String   @id @default(uuid())
   name          String
   phone         String
+  type          String   @default("NO_DEFINIDO") // "PARTICULAR" | "NEGOCIO" | "NO_DEFINIDO"
   origin        String   // "Stand", "WhatsApp", "Instagram", "Referido", "Cliente anterior", "Otro"
   createdAt     DateTime @default(now())
   opportunities Opportunity[]
+  alarmOpportunities AlarmOpportunity[]
 }
 
 model Opportunity {
@@ -34,24 +37,64 @@ model Opportunity {
   userId           String
   user             User     @relation(fields: [userId], references: [id])
   
-  productInterest  String   // "Cámara", "Kit de cámaras", "Alarma", "Cerradura", "Videoportero", "Otro"
-  productModel     String?  // "H9C", "H3C", etc
-  
-  budgetValue      Float?
-  paymentMethod    String?  // "Transferencia / efectivo", "Débito", "Crédito", "Cuotas"
-  installments     Int?
-  
-  status           String   @default("Nuevo") // "Nuevo", "Contactar", "Presupuesto enviado", "Seguimiento", "Negociación", "Venta concretada", "Venta perdida"
-  
+  // Fase 1: Embudos y Prioridades
+  status           String   @default("NUEVO") // "NUEVO" | "CONTACTADO" | "NECESIDAD_IDENTIFICADA" | "PROPUESTA_ENVIADA" | "SEGUIMIENTO" | "GANADO" | "PERDIDO" | "NUTRICION" | "Papelera"
+  priority         String   @default("MEDIA") // "ALTA" | "MEDIA" | "BAJA"
+  urgency          String?  // "HOY" | "ESTA_SEMANA" | "ESTE_MES" | "MAS_ADELANTE" | "NO_SABE"
+  nextAction       String?  // Ej: "Enviar propuesta", "Llamar"
   nextFollowUp     DateTime?
+  lastContactDate  DateTime?
   
-  hasAlarm         String?  // "Sí", "No", "No sabe"
-  alarmOpportunity String?  // "No", "Potencial", "Ofrecer"
+  // Fase 2: Calificación
+  productInterest  String   // "Cámara", "Kit de cámaras", "Alarma", "Cerradura", "Videoportero", "Otro"
+  needDescription  String?  // Qué quiere resolver
+  qLocation        String?  // Casa, Negocio, Depósito, etc.
+  qTargets         String[] // Entrada, Patio, etc.
+  qHasCameras      String?  // Primer sistema, Ya tiene, etc.
+  qZones           String?  // 1, 2, 3, 4, 5+, No definido
+  qMobileAccess    String?  // Sí, No, No sabe
+  qInstallRequired String?  // Solo equipo, Equipo + instalación, No sabe
+  
+  // Combos / Solución sugerida
+  recommendedSolution String?
+  
+  // Motivos de pérdida
+  lossReason       String?  // "Precio", "Compró en otro lugar", etc.
+  lossObservation  String?
+  
+  // Viejos campos económicos (los mantenemos por ahora)
+  productModel     String?  
+  budgetValue      Float?
+  paymentMethod    String?  
+  installments     Int?
   
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   activityLogs     ActivityLog[]
+}
+
+model AlarmOpportunity {
+  id                 String   @id @default(uuid())
+  customerId         String
+  customer           Customer @relation(fields: [customerId], references: [id])
+  userId             String
+  user               User     @relation(fields: [userId], references: [id])
+  
+  status             String   @default("SIN_CALIFICAR") // "SIN_CALIFICAR" | "CONTACTADO" | "INTERESADO" | "PROPUESTA_ENVIADA" | "GANADO" | "PERDIDO"
+  priority           String   @default("BAJA") // "ALTA" | "MEDIA" | "BAJA"
+  
+  hasAlarm           String?  // "Sí", "No", "Tenía", "No sabe"
+  interestLevel      String?  // "Alto", "Medio", "Bajo", "No interesado", "Sin calificar"
+  propertyType       String?  // "Casa", "Depto", "Negocio", "Depósito", "Oficina", "Otro"
+  monitoringInterest String?  // "Interesado", "No interesado", "Quiere info", "Más adelante"
+  
+  nextAction         String?
+  nextFollowUp       DateTime?
+  lastContactDate    DateTime?
+  
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model ActivityLog {

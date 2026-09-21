@@ -57,10 +57,9 @@ async function main() {
       productModel: 'H9C',
       budgetValue: 180000,
       paymentMethod: '3 cuotas',
-      status: 'Presupuesto enviado',
+      status: 'PROPUESTA_ENVIADA',
+      priority: 'ALTA',
       nextFollowUp: today,
-      hasAlarm: 'No sabe',
-      alarmOpportunity: 'Potencial',
     }
   })
 
@@ -69,10 +68,9 @@ async function main() {
       customerId: customer2.id,
       userId: kc.id,
       productInterest: 'Alarma',
-      status: 'Negociación',
+      status: 'SEGUIMIENTO',
+      priority: 'MEDIA',
       nextFollowUp: yesterday,
-      hasAlarm: 'No',
-      alarmOpportunity: 'Ofrecer',
     }
   })
 

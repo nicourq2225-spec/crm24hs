@@ -11,14 +11,18 @@ export async function addFollowUpAction(opportunityId: string, formData: FormDat
 
   const comment = formData.get('comment') as string;
   const status = formData.get('status') as string;
+  const nextAction = formData.get('nextAction') as string;
   const nextFollowUp = formData.get('nextFollowUp') as string;
+  const isEffectiveContact = formData.get('isEffectiveContact') === 'true';
+  const lossReason = formData.get('lossReason') as string | undefined;
+  const lossObservation = formData.get('lossObservation') as string | undefined;
   
   if (!comment || !status) {
     throw new Error('Faltan datos requeridos');
   }
 
-  if (!nextFollowUp && !['Venta concretada', 'Venta perdida'].includes(status)) {
-    throw new Error('El próximo seguimiento es obligatorio.');
+  if (!nextFollowUp && !['GANADO', 'PERDIDO'].includes(status)) {
+    throw new Error('El próximo seguimiento es obligatorio para oportunidades abiertas.');
   }
 
   const opp = await prisma.opportunity.findUnique({ where: { id: opportunityId } });
@@ -35,53 +39,101 @@ export async function addFollowUpAction(opportunityId: string, formData: FormDat
       }
     });
 
+    const updateData: any = {
+      status,
+      nextAction: nextAction || null,
+      nextFollowUp: nextFollowUp ? new Date(`${nextFollowUp}T12:00:00`) : null,
+    };
+
+    if (isEffectiveContact) {
+      updateData.lastContactDate = new Date();
+    }
+
+    if (status === 'PERDIDO') {
+      updateData.lossReason = lossReason;
+      updateData.lossObservation = lossObservation;
+    }
+
     await tx.opportunity.update({
       where: { id: opportunityId },
-      data: {
-        status,
-        nextFollowUp: nextFollowUp ? new Date(`${nextFollowUp}T12:00:00`) : null,
-      }
+      data: updateData
     });
   });
 
   revalidatePath(`/opportunities/${opportunityId}`);
 }
 
-export async function updateEconomicInfoAction(opportunityId: string, formData: FormData) {
-  const productModel = formData.get('productModel') as string;
-  const budgetValueStr = formData.get('budgetValue') as string;
-  const paymentMethod = formData.get('paymentMethod') as string;
-  const installmentsStr = formData.get('installments') as string;
-  
-  const budgetValue = budgetValueStr ? parseFloat(budgetValueStr) : null;
-  const installments = installmentsStr ? parseInt(installmentsStr) : null;
+export async function updateQualificationAction(opportunityId: string, formData: FormData) {
+  const qLocation = formData.get('qLocation') as string;
+  const qTargets = formData.getAll('qTargets') as string[];
+  const qHasCameras = formData.get('qHasCameras') as string;
+  const qZones = formData.get('qZones') as string;
+  const qMobileAccess = formData.get('qMobileAccess') as string;
+  const qInstallRequired = formData.get('qInstallRequired') as string;
+  const recommendedSolution = formData.get('recommendedSolution') as string;
+  const priority = formData.get('priority') as string;
 
   await prisma.opportunity.update({
     where: { id: opportunityId },
     data: {
-      productModel,
-      budgetValue,
-      paymentMethod,
-      installments,
+      qLocation,
+      qTargets,
+      qHasCameras,
+      qZones,
+      qMobileAccess,
+      qInstallRequired,
+      recommendedSolution,
+      priority: priority || undefined,
     }
   });
 
   revalidatePath(`/opportunities/${opportunityId}`);
 }
 
-export async function updateAlarmInfoAction(opportunityId: string, formData: FormData) {
+export async function updateAlarmInfoAction(customerId: string, formData: FormData) {
   const hasAlarm = formData.get('hasAlarm') as string;
-  const alarmOpportunity = formData.get('alarmOpportunity') as string;
+  const interestLevel = formData.get('interestLevel') as string;
+  const propertyType = formData.get('propertyType') as string;
+  const monitoringInterest = formData.get('monitoringInterest') as string;
+  const nextAction = formData.get('nextAction') as string;
+  const status = formData.get('status') as string;
 
-  await prisma.opportunity.update({
-    where: { id: opportunityId },
-    data: {
-      hasAlarm,
-      alarmOpportunity,
-    }
+  // Let's find or create the alarm opportunity
+  const alarmOpp = await prisma.alarmOpportunity.findFirst({
+    where: { customerId }
   });
 
-  revalidatePath(`/opportunities/${opportunityId}`);
+  if (alarmOpp) {
+    await prisma.alarmOpportunity.update({
+      where: { id: alarmOpp.id },
+      data: {
+        hasAlarm,
+        interestLevel,
+        propertyType,
+        monitoringInterest,
+        nextAction,
+        status: status || alarmOpp.status,
+      }
+    });
+  } else {
+    // Should exist from new lead, but just in case
+    const cookieStore = await cookies();
+    const userId = cookieStore.get('userId')?.value || '1';
+    await prisma.alarmOpportunity.create({
+      data: {
+        customerId,
+        userId,
+        hasAlarm,
+        interestLevel,
+        propertyType,
+        monitoringInterest,
+        nextAction,
+        status: status || 'INTERESADO',
+      }
+    });
+  }
+
+  revalidatePath(`/opportunities`); // Invalidate everything to be safe since we don't have the opp ID here easily
 }
 
 export async function moveToTrashAction(opportunityId: string) {
@@ -117,7 +169,7 @@ export async function editCustomerAction(opportunityId: string, formData: FormDa
 
   const name = formData.get('name') as string;
   const phone = formData.get('phone') as string;
-  const productInterest = formData.get('productInterest') as string;
+  const type = formData.get('type') as string;
 
   const opp = await prisma.opportunity.findUnique({ where: { id: opportunityId } });
   if (!opp) throw new Error('Oportunidad no encontrada');
@@ -125,12 +177,7 @@ export async function editCustomerAction(opportunityId: string, formData: FormDa
   await prisma.$transaction(async (tx) => {
     await tx.customer.update({
       where: { id: opp.customerId },
-      data: { name, phone }
-    });
-
-    await tx.opportunity.update({
-      where: { id: opportunityId },
-      data: { productInterest }
+      data: { name, phone, type }
     });
   });
 

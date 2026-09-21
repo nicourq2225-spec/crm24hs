@@ -12,26 +12,40 @@ export async function createOpportunityAction(formData: FormData) {
   const name = formData.get('name') as string;
   const phone = formData.get('phone') as string;
   const origin = formData.get('origin') as string;
+  const type = formData.get('type') as string;
+  const needDescription = formData.get('needDescription') as string;
   const productInterest = formData.get('productInterest') as string;
-  const status = formData.get('status') as string;
-  const nextFollowUp = formData.get('nextFollowUp') as string;
-  
-  if (!name || !phone || !productInterest || !status) {
-    throw new Error('Faltan datos requeridos');
+  const urgency = formData.get('urgency') as string;
+
+  if (!name || !phone) {
+    throw new Error('Nombre y teléfono son obligatorios');
   }
 
-  // Next follow up is required unless status is won/lost
-  if (!nextFollowUp && !['Venta concretada', 'Venta perdida'].includes(status)) {
-    throw new Error('El próximo seguimiento es obligatorio para oportunidades abiertas.');
-  }
+  // CALCULAR PRIORIDAD
+  let priority = 'MEDIA';
+  if (urgency === 'HOY') priority = 'ALTA';
+  if (type === 'NEGOCIO' && ['HOY', 'ESTA_SEMANA'].includes(urgency)) priority = 'ALTA';
+  if (urgency === 'MAS_ADELANTE') priority = 'BAJA';
 
-  // Create customer and opportunity in a transaction
+  const nextFollowUp = new Date(); // El seguimiento empieza hoy!
+
+  // Create customer, opportunity, and empty alarm opportunity in a transaction
   const opportunity = await prisma.$transaction(async (tx) => {
     const customer = await tx.customer.create({
       data: {
         name,
         phone,
-        origin: origin || 'Otro'
+        type,
+        origin: origin || 'Stand'
+      }
+    });
+
+    await tx.alarmOpportunity.create({
+      data: {
+        customerId: customer.id,
+        userId: userId,
+        status: 'SIN_CALIFICAR',
+        priority: 'BAJA'
       }
     });
 
@@ -39,9 +53,14 @@ export async function createOpportunityAction(formData: FormData) {
       data: {
         customerId: customer.id,
         userId: userId,
+        status: 'NUEVO',
+        priority,
+        urgency,
+        needDescription,
         productInterest,
-        status,
-        nextFollowUp: nextFollowUp ? new Date(`${nextFollowUp}T12:00:00`) : null,
+        nextFollowUp,
+        nextAction: 'Calificar oportunidad y enviar propuesta',
+        lastContactDate: new Date(), // El contacto 0
       }
     });
   });

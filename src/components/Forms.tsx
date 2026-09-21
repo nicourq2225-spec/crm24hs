@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { addFollowUpAction, updateEconomicInfoAction, updateAlarmInfoAction } from '@/app/opportunities/[id]/actions';
+import { addFollowUpAction, updateQualificationAction, updateAlarmInfoAction } from '@/app/opportunities/[id]/actions';
 import { useRouter } from 'next/navigation';
 
 export function AddFollowUpForm({ opportunityId, currentStatus }: { opportunityId: string, currentStatus: string }) {
@@ -17,7 +17,6 @@ export function AddFollowUpForm({ opportunityId, currentStatus }: { opportunityI
     
     try {
       await addFollowUpAction(opportunityId, new FormData(e.currentTarget));
-      // Reset form
       (e.target as HTMLFormElement).reset();
       router.refresh();
     } catch (err: any) {
@@ -27,126 +26,266 @@ export function AddFollowUpForm({ opportunityId, currentStatus }: { opportunityI
     }
   };
 
-  const nextFollowUpRequired = !['Venta concretada', 'Venta perdida'].includes(status);
+  const isClosed = ['GANADO', 'PERDIDO'].includes(status);
+  const isLost = status === 'PERDIDO';
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-      <h3 className="font-bold text-lg mb-2 border-b pb-2 text-slate-800">📋 Agregar Seguimiento</h3>
+      <h3 className="font-bold text-lg mb-2 border-b pb-2 text-slate-800">📝 Registrar Seguimiento</h3>
       
       {error && <div className="text-red-600 bg-red-50 p-2 rounded text-sm">{error}</div>}
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Comentario</label>
-        <textarea required name="comment" rows={3} className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" placeholder="¿Qué se habló con el cliente?" />
+        <label className="block text-sm font-medium text-slate-700 mb-1">Resultado de la interacción</label>
+        <textarea required name="comment" rows={3} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-blue-500" placeholder="¿Qué se habló con el cliente?" />
+      </div>
+
+      <div className="flex items-center gap-2 mb-4">
+        <input type="checkbox" id="isEffectiveContact" name="isEffectiveContact" value="true" className="w-4 h-4 text-blue-600 rounded" defaultChecked />
+        <label htmlFor="isEffectiveContact" className="text-sm text-slate-700">Fue un contacto efectivo (el cliente respondió)</label>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Nuevo Estado</label>
-        <select name="status" value={status} onChange={(e) => setStatus(e.target.value)} className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500">
-          <option value="Nuevo">🆕 Nuevo</option>
-          <option value="Contactar">📞 Contactar</option>
-          <option value="Presupuesto enviado">💰 Presupuesto enviado</option>
-          <option value="Seguimiento">🔔 Seguimiento</option>
-          <option value="Negociación">🤝 Negociación</option>
-          <option value="Venta concretada">✅ Venta concretada</option>
-          <option value="Venta perdida">❌ Venta perdida</option>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Mover a Etapa</label>
+        <select name="status" value={status} onChange={(e) => setStatus(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500">
+          <option value="NUEVO">NUEVO</option>
+          <option value="CONTACTADO">CONTACTADO</option>
+          <option value="NECESIDAD_IDENTIFICADA">NECESIDAD IDENTIFICADA</option>
+          <option value="PROPUESTA_ENVIADA">PROPUESTA ENVIADA</option>
+          <option value="SEGUIMIENTO">SEGUIMIENTO</option>
+          <option value="NUTRICION">NUTRICIÓN</option>
+          <option value="GANADO">✅ GANADO</option>
+          <option value="PERDIDO">❌ PERDIDO</option>
         </select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Próximo Seguimiento {nextFollowUpRequired && <span className="text-red-500">*</span>}
-        </label>
-        <input 
-          type="date" 
-          name="nextFollowUp" 
-          required={nextFollowUpRequired}
-          className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
-        />
-      </div>
+      {isLost && (
+        <div className="space-y-3 bg-red-50 p-4 rounded-xl border border-red-100">
+          <div>
+            <label className="block text-sm font-bold text-red-800 mb-1">Motivo de Pérdida</label>
+            <select name="lossReason" required className="w-full p-2 rounded border border-red-200 outline-none">
+              <option value="">Seleccionar...</option>
+              <option value="Precio">Precio alto</option>
+              <option value="Compró en otro lugar">Compró en otro lugar</option>
+              <option value="Postergó">Postergó la compra</option>
+              <option value="No necesitaba">No necesitaba realmente</option>
+              <option value="Falta de stock">Falta de stock</option>
+              <option value="No respondió">Dejó de responder</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-red-800 mb-1">Observaciones</label>
+            <input type="text" name="lossObservation" className="w-full p-2 rounded border border-red-200 outline-none" placeholder="Opcional..." />
+          </div>
+        </div>
+      )}
 
-      <button disabled={loading} type="submit" className="w-full bg-blue-600 text-white font-bold p-3 rounded-xl hover:bg-blue-700 disabled:opacity-50">
+      {!isClosed && (
+        <>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Próxima Acción Obligatoria</label>
+            <input type="text" required name="nextAction" className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500" placeholder="Ej: Llamar para confirmar si vio el PDF" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Fecha de Próxima Acción <span className="text-red-500">*</span>
+            </label>
+            <input 
+              type="date" 
+              name="nextFollowUp" 
+              required
+              className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500" 
+            />
+          </div>
+        </>
+      )}
+
+      <button disabled={loading} type="submit" className="w-full bg-slate-900 text-white font-bold p-4 rounded-xl shadow hover:bg-blue-700 disabled:opacity-50 transition-all">
         {loading ? 'Guardando...' : 'GUARDAR SEGUIMIENTO'}
       </button>
     </form>
   );
 }
 
-export function EconomicInfoForm({ opportunity }: { opportunity: any }) {
+export function QualificationForm({ opportunity }: { opportunity: any }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    await updateEconomicInfoAction(opportunity.id, new FormData(e.currentTarget));
+    await updateQualificationAction(opportunity.id, new FormData(e.currentTarget));
     setLoading(false);
     router.refresh();
   };
 
+  const targets = opportunity.qTargets || [];
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-xs font-medium text-slate-500">Modelo específico</label>
-        <input type="text" name="productModel" defaultValue={opportunity.productModel || ''} className="w-full p-2 border-b border-slate-200 focus:border-blue-500 outline-none bg-transparent" placeholder="Ej. H9C" />
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">¿Para dónde la necesitás?</label>
+          <select name="qLocation" defaultValue={opportunity.qLocation || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="Casa">Casa</option>
+            <option value="Negocio">Negocio</option>
+            <option value="Depósito">Depósito</option>
+            <option value="Exterior">Exterior general</option>
+            <option value="Interior">Interior general</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">¿Qué querés controlar?</label>
+          <div className="flex flex-wrap gap-2 text-sm">
+            {['Entrada', 'Patio', 'Cochera', 'Caja', 'Salón', 'Depósito', 'Personas', 'Vehículo'].map(t => (
+              <label key={t} className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2 py-1 rounded cursor-pointer hover:bg-blue-50">
+                <input type="checkbox" name="qTargets" value={t} defaultChecked={targets.includes(t)} />
+                <span>{t}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">¿Ya tenés cámaras?</label>
+          <select name="qHasCameras" defaultValue={opportunity.qHasCameras || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="Primer sistema">Primer sistema</option>
+            <option value="Ya tiene cámaras">Ya tiene cámaras</option>
+            <option value="Quiere ampliar">Quiere ampliar</option>
+            <option value="Quiere reemplazar">Quiere reemplazar</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Zonas a cubrir</label>
+          <select name="qZones" defaultValue={opportunity.qZones || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5+">5+</option>
+            <option value="No definido">No definido</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">¿Mirar desde el celular?</label>
+          <select name="qMobileAccess" defaultValue={opportunity.qMobileAccess || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+            <option value="No sabe">No sabe</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">¿Instalación?</label>
+          <select name="qInstallRequired" defaultValue={opportunity.qInstallRequired || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="Solo equipo">Solo equipo</option>
+            <option value="Equipo + instalación">Equipo + instalación</option>
+            <option value="No sabe">No sabe</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label className="block text-xs font-medium text-slate-500">Valor Presupuesto ($)</label>
-        <input type="number" name="budgetValue" defaultValue={opportunity.budgetValue || ''} className="w-full p-2 border-b border-slate-200 focus:border-blue-500 outline-none bg-transparent" placeholder="0.00" />
-      </div>
-      <div>
-        <label className="block text-xs font-medium text-slate-500">Forma de Pago</label>
-        <select name="paymentMethod" defaultValue={opportunity.paymentMethod || ''} className="w-full p-2 border-b border-slate-200 outline-none bg-transparent">
-          <option value="">Seleccionar...</option>
-          <option value="Transferencia / efectivo">Transferencia / efectivo</option>
-          <option value="Débito">Débito</option>
-          <option value="Crédito">Crédito</option>
-          <option value="Cuotas">Cuotas</option>
+      
+      <div className="pt-2 border-t border-slate-100">
+        <label className="block text-sm font-bold text-blue-800 mb-1">💡 Solución Recomendada</label>
+        <select name="recommendedSolution" defaultValue={opportunity.recommendedSolution || ''} className="w-full p-3 rounded-xl border border-blue-200 bg-blue-50 outline-none font-medium">
+          <option value="">Seleccionar Combo...</option>
+          <option value="Solución Casa">Solución Casa</option>
+          <option value="Solución Negocio">Solución Negocio</option>
+          <option value="Solución Entrada">Solución Entrada (VideoPortero/Cámara)</option>
+          <option value="Solución Exterior">Solución Exterior</option>
+          <option value="Solución Personalizada">Solución Personalizada</option>
         </select>
       </div>
-      <div>
-        <label className="block text-xs font-medium text-slate-500">Cant. Cuotas</label>
-        <input type="number" name="installments" defaultValue={opportunity.installments || ''} className="w-full p-2 border-b border-slate-200 focus:border-blue-500 outline-none bg-transparent" placeholder="Ej. 3" />
+
+      <div className="pt-2">
+        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Prioridad (Ajuste Manual)</label>
+        <select name="priority" defaultValue={opportunity.priority || 'MEDIA'} className="w-1/2 p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+          <option value="ALTA">🔴 Alta</option>
+          <option value="MEDIA">🟡 Media</option>
+          <option value="BAJA">🟢 Baja</option>
+        </select>
       </div>
-      <button disabled={loading} type="submit" className="text-sm font-bold text-blue-600 hover:text-blue-800 disabled:opacity-50">
-        Guardar datos económicos
+
+      <button disabled={loading} type="submit" className="text-sm bg-slate-100 px-4 py-2 rounded-lg font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50">
+        {loading ? 'Guardando...' : 'Guardar Calificación'}
       </button>
     </form>
   );
 }
 
-export function AlarmInfoForm({ opportunity }: { opportunity: any }) {
+export function AlarmInfoForm({ alarmOpportunity, customerId }: { alarmOpportunity: any, customerId: string }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    await updateAlarmInfoAction(opportunity.id, new FormData(e.currentTarget));
+    await updateAlarmInfoAction(customerId, new FormData(e.currentTarget));
     setLoading(false);
     router.refresh();
   };
 
+  const opp = alarmOpportunity || {};
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-xs font-medium text-slate-500">¿Tiene alarma?</label>
-        <select name="hasAlarm" defaultValue={opportunity.hasAlarm || 'No sabe'} className="w-full p-2 border-b border-slate-200 outline-none bg-transparent">
-          <option value="Sí">Sí</option>
-          <option value="No">No</option>
-          <option value="No sabe">No sabe</option>
-        </select>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-medium text-slate-500">¿Tiene alarma?</label>
+          <select name="hasAlarm" defaultValue={opp.hasAlarm || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="Sí">Sí, tiene alarma</option>
+            <option value="No">No tiene alarma</option>
+            <option value="Tenía">Tenía alarma anteriormente</option>
+            <option value="No sabe">No sabe / No seguro</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500">¿Le interesaría Monitoreo?</label>
+          <select name="monitoringInterest" defaultValue={opp.monitoringInterest || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="Interesado">Sí, está interesado</option>
+            <option value="Quiere info">Quiere saber cómo funciona</option>
+            <option value="Evaluando">Lo está evaluando</option>
+            <option value="No interesado">No le interesa</option>
+            <option value="Más adelante">Más adelante</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Nivel de Interés Global</label>
+          <select name="interestLevel" defaultValue={opp.interestLevel || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="Alto">Alto</option>
+            <option value="Medio">Medio</option>
+            <option value="Bajo">Bajo</option>
+            <option value="No interesado">No interesado</option>
+            <option value="Sin calificar">Sin calificar</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-500">Inmueble a proteger</label>
+          <select name="propertyType" defaultValue={opp.propertyType || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+            <option value="">Seleccionar...</option>
+            <option value="Casa">Casa</option>
+            <option value="Depto">Departamento</option>
+            <option value="Negocio">Negocio</option>
+            <option value="Depósito">Depósito</option>
+            <option value="Oficina">Oficina</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
       </div>
       <div>
-        <label className="block text-xs font-medium text-slate-500">Oportunidad de Alarma</label>
-        <select name="alarmOpportunity" defaultValue={opportunity.alarmOpportunity || 'No'} className="w-full p-2 border-b border-slate-200 outline-none bg-transparent">
-          <option value="No">🔴 No</option>
-          <option value="Potencial">🟡 Potencial</option>
-          <option value="Ofrecer">🟢 Ofrecer</option>
-        </select>
+        <label className="block text-xs font-medium text-slate-500">Próxima Acción (Alarma)</label>
+        <input type="text" name="nextAction" defaultValue={opp.nextAction || ''} className="w-full p-2 rounded bg-slate-50 border border-slate-200 outline-none" placeholder="Ej: Enviar PDF explicativo de monitoreo" />
       </div>
-      <button disabled={loading} type="submit" className="text-sm font-bold text-blue-600 hover:text-blue-800 disabled:opacity-50">
-        Guardar info alarma
+      <button disabled={loading} type="submit" className="text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg disabled:opacity-50">
+        {loading ? 'Guardando...' : 'Actualizar Datos de Alarma'}
       </button>
     </form>
   );
