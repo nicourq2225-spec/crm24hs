@@ -204,15 +204,16 @@ export function QualificationForm({ opportunity }: { opportunity: any }) {
 
       <div className="pt-2">
         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Prioridad (Ajuste Manual)</label>
-        <select name="priority" defaultValue={opportunity.priority || 'MEDIA'} className="w-1/2 p-2 rounded bg-slate-50 border border-slate-200 outline-none">
-          <option value="ALTA">🔴 Alta</option>
-          <option value="MEDIA">🟡 Media</option>
-          <option value="BAJA">🟢 Baja</option>
+        <select name="priority" defaultValue="" className="w-1/2 p-2 rounded bg-slate-50 border border-slate-200 outline-none">
+          <option value="">Dejar Automática</option>
+          <option value="ALTA">🔴 Forzar Alta</option>
+          <option value="MEDIA">🟡 Forzar Media</option>
+          <option value="BAJA">🟢 Forzar Baja</option>
         </select>
       </div>
 
       <button disabled={loading} type="submit" className="text-sm bg-slate-100 px-4 py-2 rounded-lg font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50">
-        {loading ? 'Guardando...' : 'Guardar Calificación'}
+        {loading ? 'Guardando...' : 'Guardar Calificación y Analizar'}
       </button>
     </form>
   );

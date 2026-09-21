@@ -70,8 +70,36 @@ export async function updateQualificationAction(opportunityId: string, formData:
   const qZones = formData.get('qZones') as string;
   const qMobileAccess = formData.get('qMobileAccess') as string;
   const qInstallRequired = formData.get('qInstallRequired') as string;
-  const recommendedSolution = formData.get('recommendedSolution') as string;
-  const priority = formData.get('priority') as string;
+  let recommendedSolution = formData.get('recommendedSolution') as string;
+  const manualPriority = formData.get('priority') as string;
+
+  const opp = await prisma.opportunity.findUnique({ where: { id: opportunityId }, include: { customer: { include: { alarmOpportunities: true } } } });
+  if (!opp) return;
+
+  const isBusiness = opp.customer.type === 'NEGOCIO';
+  const alarmOpp = opp.customer.alarmOpportunities[0];
+  const isAlarmHot = alarmOpp && (alarmOpp.monitoringInterest === 'Interesado' || alarmOpp.interestLevel === 'Alto');
+
+  // Calcular Auto Prioridad
+  let calculatedPriority = 'BAJA';
+  if (opp.urgency === 'HOY' || opp.urgency === 'ESTA_SEMANA' || (isBusiness && qZones >= '2') || qZones >= '3' || qInstallRequired === 'Equipo + instalación' || isAlarmHot) {
+    calculatedPriority = 'ALTA';
+  } else if (opp.urgency === 'ESTE_MES' || qZones === '1' || qZones === '2') {
+    calculatedPriority = 'MEDIA';
+  }
+
+  // Calculate Solution Suggestion if not manually overridden
+  if (!recommendedSolution) {
+    if (qLocation === 'Exterior') recommendedSolution = 'Solución Exterior';
+    else if (qTargets?.includes('Entrada') && qZones === '1') recommendedSolution = 'Solución Entrada';
+    else if (isBusiness) {
+      if (qZones === '3' || qZones === '4' || qZones === '5+') recommendedSolution = 'PROYECTO';
+      else recommendedSolution = 'Solución Negocio';
+    } else {
+      if (qZones === '1') recommendedSolution = 'Solución Casa (Cámara individual)';
+      else if (qZones && qZones !== 'No definido') recommendedSolution = 'Solución Casa Multizona';
+    }
+  }
 
   await prisma.opportunity.update({
     where: { id: opportunityId },
@@ -83,7 +111,7 @@ export async function updateQualificationAction(opportunityId: string, formData:
       qMobileAccess,
       qInstallRequired,
       recommendedSolution,
-      priority: priority || undefined,
+      priority: manualPriority || calculatedPriority,
     }
   });
 

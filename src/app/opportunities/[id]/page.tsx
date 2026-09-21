@@ -4,6 +4,7 @@ import prisma from '@/lib/db';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AddFollowUpForm, QualificationForm, AlarmInfoForm } from '@/components/Forms';
+import { CommercialAssistant } from '@/components/CommercialAssistant';
 
 export const dynamic = 'force-dynamic';
 
@@ -116,6 +117,9 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           </div>
         </div>
       </div>
+
+      {/* MOTOR DE INTERPRETACIÓN DE NECESIDAD */}
+      <CommercialAssistant opportunity={opportunity} alarmOpp={alarmOpp} />
 
       <div className="grid md:grid-cols-2 gap-6 items-start">
         
