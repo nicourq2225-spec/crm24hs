@@ -398,11 +398,21 @@ export function EditCustomerForm({ opportunity, action }: { opportunity: any, ac
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Cliente</label>
-        <select name="type" defaultValue={opportunity.customer.type || 'PARTICULAR'} className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500">
-          <option value="PARTICULAR">Particular</option>
-          <option value="NEGOCIO">Negocio</option>
-        </select>
+        <label className="block text-sm font-medium text-slate-700 mb-2">Tipo de Cliente</label>
+        <div className="flex gap-4">
+          <label className="flex-1 cursor-pointer">
+            <input type="radio" name="type" value="PARTICULAR" defaultChecked={opportunity.customer.type !== 'NEGOCIO'} className="peer sr-only" />
+            <div className="p-3 text-center rounded-xl border border-slate-200 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-700 font-medium transition-all">
+              🏠 Particular
+            </div>
+          </label>
+          <label className="flex-1 cursor-pointer">
+            <input type="radio" name="type" value="NEGOCIO" defaultChecked={opportunity.customer.type === 'NEGOCIO'} className="peer sr-only" />
+            <div className="p-3 text-center rounded-xl border border-slate-200 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-700 font-medium transition-all">
+              🏪 Negocio
+            </div>
+          </label>
+        </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1">Qué necesita (Resumen Rápido)</label>
@@ -425,13 +435,33 @@ export function EditCustomerForm({ opportunity, action }: { opportunity: any, ac
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">¿Cuándo piensa comprar? (Urgencia)</label>
-        <select name="urgency" defaultValue={opportunity.urgency || 'ESTA_SEMANA'} className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500">
-          <option value="HOY">🔥 Hoy</option>
-          <option value="ESTA_SEMANA">⚡ Esta semana</option>
-          <option value="ESTE_MES">📅 Este mes</option>
-          <option value="MAS_ADELANTE">⏳ Más adelante</option>
-        </select>
+        <label className="block text-sm font-medium text-slate-700 mb-2">¿Cuándo piensa comprar? (Urgencia)</label>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="cursor-pointer">
+            <input type="radio" name="urgency" value="HOY" defaultChecked={opportunity.urgency === 'HOY'} className="peer sr-only" />
+            <div className="p-2 text-sm text-center rounded-lg border border-slate-200 peer-checked:border-red-500 peer-checked:bg-red-50 peer-checked:text-red-700 font-medium transition-all">
+              🔥 Hoy
+            </div>
+          </label>
+          <label className="cursor-pointer">
+            <input type="radio" name="urgency" value="ESTA_SEMANA" defaultChecked={opportunity.urgency === 'ESTA_SEMANA'} className="peer sr-only" />
+            <div className="p-2 text-sm text-center rounded-lg border border-slate-200 peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:text-orange-700 font-medium transition-all">
+              ⚡ Esta semana
+            </div>
+          </label>
+          <label className="cursor-pointer">
+            <input type="radio" name="urgency" value="ESTE_MES" defaultChecked={opportunity.urgency === 'ESTE_MES'} className="peer sr-only" />
+            <div className="p-2 text-sm text-center rounded-lg border border-slate-200 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 peer-checked:text-yellow-700 font-medium transition-all">
+              📅 Este mes
+            </div>
+          </label>
+          <label className="cursor-pointer">
+            <input type="radio" name="urgency" value="MAS_ADELANTE" defaultChecked={opportunity.urgency === 'MAS_ADELANTE'} className="peer sr-only" />
+            <div className="p-2 text-sm text-center rounded-lg border border-slate-200 peer-checked:border-slate-500 peer-checked:bg-slate-50 peer-checked:text-slate-700 font-medium transition-all">
+              ⏳ Más adelante
+            </div>
+          </label>
+        </div>
       </div>
       <div className="pt-4">
         <button disabled={loading} type="submit" className="w-full bg-blue-600 text-white font-bold p-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
