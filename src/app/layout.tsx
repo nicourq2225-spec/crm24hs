@@ -50,12 +50,7 @@ export default async function RootLayout({
                 <span className="text-xs md:text-base font-medium">Alarmas</span>
               </Link>
               
-              <Link href="/trash" className="flex flex-col md:flex-row items-center gap-1 md:gap-3 text-slate-300 hover:text-white transition-colors">
-                <span className="text-xl">🗑️</span>
-                <span className="text-xs md:text-base font-medium">Papelera</span>
-              </Link>
-
-              <div className="md:mt-auto hidden md:block">
+              <div className="md:mt-auto">
                  <form action={async () => {
                    'use server';
                    const { cookies } = await import('next/headers');
@@ -63,8 +58,9 @@ export default async function RootLayout({
                    const { redirect } = await import('next/navigation');
                    redirect('/login');
                  }}>
-                   <button type="submit" className="text-slate-400 hover:text-white font-medium text-sm w-full text-left">
-                     Cerrar Sesión
+                   <button type="submit" className="flex flex-col md:flex-row items-center gap-1 md:gap-3 text-slate-400 hover:text-white transition-colors w-full md:text-left">
+                     <span className="text-xl md:hidden">🚪</span>
+                     <span className="text-[10px] md:text-sm font-medium">Salir</span>
                    </button>
                  </form>
               </div>

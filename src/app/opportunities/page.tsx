@@ -89,8 +89,8 @@ export default async function OpportunitiesPage({
               Mis clientes
             </a>
           )}
-          <a href="/opportunities?filter=negociacion" className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold border ${filter === 'negociacion' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
-            Negociaciones
+          <a href="/trash" className="px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold border bg-white text-slate-600 border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 flex items-center gap-1">
+            🗑️ Papelera
           </a>
           <a href="/opportunities?filter=ganadas" className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-semibold border ${filter === 'ganadas' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
             Concretadas
