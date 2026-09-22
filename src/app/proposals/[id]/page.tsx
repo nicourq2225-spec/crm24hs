@@ -40,15 +40,15 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
           ← Volver
         </a>
         <button 
-          onClick="window.print()" 
+          id="download-pdf-btn"
           className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold shadow transition-colors flex items-center gap-2 whitespace-nowrap"
         >
-          🖨️ Imprimir / PDF
+          📄 Descargar PDF
         </button>
       </div>
 
       {/* A4 Document Container */}
-      <div className="max-w-[21cm] mx-auto bg-white min-h-[29.7cm] shadow-xl print:shadow-none p-8 md:p-12 relative overflow-hidden">
+      <div id="pdf-content" className="max-w-[21cm] mx-auto bg-white min-h-[29.7cm] shadow-xl print:shadow-none p-8 md:p-12 relative overflow-hidden">
         
         {/* Header styling */}
         <div className="absolute top-0 left-0 w-full h-3 bg-blue-700"></div>
@@ -186,10 +186,37 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              // To handle print button
               document.addEventListener('click', function(e) {
-                if (e.target.closest('button') && e.target.closest('button').innerText.includes('Imprimir')) {
-                  window.print();
+                const btn = e.target.closest('#download-pdf-btn');
+                if (btn) {
+                  e.preventDefault();
+                  
+                  const element = document.getElementById('pdf-content');
+                  const originalText = btn.innerHTML;
+                  btn.innerHTML = '⏳ Generando PDF...';
+                  
+                  const opt = {
+                    margin:       [0, 0, 0, 0], // The padding is handled by CSS
+                    filename:     'Propuesta_Comercial_${opportunity.customer.name.replace(/\s+/g, '_')}.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                  };
+
+                  const generate = () => {
+                    window.html2pdf().set(opt).from(element).save().then(() => {
+                      btn.innerHTML = originalText;
+                    });
+                  };
+
+                  if (!window.html2pdf) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                    script.onload = generate;
+                    document.head.appendChild(script);
+                  } else {
+                    generate();
+                  }
                 }
               });
             `,
