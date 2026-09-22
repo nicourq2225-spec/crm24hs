@@ -418,8 +418,8 @@ export function EditCustomerForm({ opportunity, action }: { opportunity: any, ac
         <label className="block text-sm font-medium text-slate-700 mb-1">Qué necesita (Resumen Rápido)</label>
         <input 
           type="text" 
-          name="quickNeed" 
-          defaultValue={opportunity.quickNeed || ''}
+          name="needDescription" 
+          defaultValue={opportunity.needDescription || ''}
           className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
         />
       </div>
