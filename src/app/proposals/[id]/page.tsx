@@ -196,23 +196,35 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
                   btn.innerHTML = '⏳ Generando PDF...';
                   
                   const opt = {
-                    margin:       [0, 0, 0, 0], // The padding is handled by CSS
+                    margin:       0, // The padding is handled by CSS
                     filename:     'Propuesta_Comercial_${opportunity.customer.name.replace(/\s+/g, '_')}.pdf',
                     image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true },
+                    html2canvas:  { scale: 2, logging: false },
                     jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
                   };
 
                   const generate = () => {
-                    window.html2pdf().set(opt).from(element).save().then(() => {
+                    try {
+                      window.html2pdf().set(opt).from(element).save().then(() => {
+                        btn.innerHTML = originalText;
+                      }).catch((err) => {
+                        alert('Error generando PDF: ' + err);
+                        btn.innerHTML = originalText;
+                      });
+                    } catch (err) {
+                      alert('Error al iniciar PDF: ' + err);
                       btn.innerHTML = originalText;
-                    });
+                    }
                   };
 
-                  if (!window.html2pdf) {
+                  if (typeof window.html2pdf === 'undefined') {
                     const script = document.createElement('script');
                     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
                     script.onload = generate;
+                    script.onerror = () => {
+                      alert('Error al cargar la librería de PDF. Verifica tu conexión a internet.');
+                      btn.innerHTML = originalText;
+                    };
                     document.head.appendChild(script);
                   } else {
                     generate();
