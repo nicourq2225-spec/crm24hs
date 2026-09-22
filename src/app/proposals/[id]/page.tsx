@@ -66,7 +66,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         </header>
 
         {/* CLIENT DETAILS */}
-        <section className="mb-10 bg-slate-50 p-6 rounded-xl border border-slate-100">
+        <section className="mb-10 bg-slate-50 p-6 rounded-xl border border-slate-100 print:break-inside-avoid">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Preparado para</p>
@@ -82,7 +82,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         </section>
 
         {/* NEEDS ANALYSIS */}
-        <section className="mb-10">
+        <section className="mb-10 print:break-inside-avoid">
           <h2 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">1. Análisis de Necesidad</h2>
           <p className="text-slate-700 leading-relaxed">
             De acuerdo a nuestro relevamiento, hemos diseñado esta propuesta para proteger <strong>{qLocation || 'su propiedad'}</strong>. 
@@ -96,7 +96,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         </section>
 
         {/* SOLUTION */}
-        <section className="mb-10">
+        <section className="mb-10 print:break-inside-avoid">
           <h2 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">2. Solución Recomendada</h2>
           
           <div className="bg-blue-600 print:bg-blue-50 text-white print:text-blue-900 p-6 rounded-2xl shadow-md mb-6 print:border print:border-blue-200">
@@ -105,7 +105,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
           </div>
 
           {opportunity.proposalProducts && (
-            <div className="mb-6 bg-slate-50 border border-slate-200 p-5 rounded-xl">
+            <div className="mb-6 bg-slate-50 border border-slate-200 p-5 rounded-xl print:break-inside-avoid">
               <h4 className="font-bold text-slate-800 mb-3 text-sm uppercase tracking-wider">Detalle del Equipamiento</h4>
               <div className="text-slate-700 whitespace-pre-line text-sm leading-relaxed">
                 {opportunity.proposalProducts}
@@ -114,7 +114,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
           )}
 
           {opportunity.proposalBenefits && (
-            <div className="mb-6 bg-green-50 border border-green-200 p-5 rounded-xl">
+            <div className="mb-6 bg-green-50 border border-green-200 p-5 rounded-xl print:break-inside-avoid">
               <h4 className="font-bold text-green-800 mb-2 text-sm uppercase tracking-wider">Beneficios Incluidos</h4>
               <div className="text-green-900 whitespace-pre-line text-sm leading-relaxed font-medium">
                 {opportunity.proposalBenefits}
@@ -123,7 +123,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
           )}
 
           <div className="space-y-4">
-            <div className="flex gap-4 items-start">
+            <div className="flex gap-4 items-start print:break-inside-avoid">
               <div className="text-2xl mt-1">📹</div>
               <div>
                 <h4 className="font-bold text-slate-800">Equipamiento de Videovigilancia</h4>
@@ -132,7 +132,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
             </div>
             
             {qInstallRequired === 'Equipo + instalación' && (
-              <div className="flex gap-4 items-start">
+              <div className="flex gap-4 items-start print:break-inside-avoid">
                 <div className="text-2xl mt-1">🛠️</div>
                 <div>
                   <h4 className="font-bold text-slate-800">Servicio de Instalación Integral</h4>
@@ -142,7 +142,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
             )}
 
             {needsAlarm && (
-              <div className="flex gap-4 items-start">
+              <div className="flex gap-4 items-start print:break-inside-avoid">
                 <div className="text-2xl mt-1">🚨</div>
                 <div>
                   <h4 className="font-bold text-slate-800">Módulo de Alarma Monitoreada (Opcional)</h4>
@@ -154,7 +154,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         </section>
 
         {/* INVESTMENT */}
-        <section className="mb-12">
+        <section className="mb-12 print:break-inside-avoid">
           <h2 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">3. Inversión Estimada</h2>
           <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
             <div className="flex justify-between items-center mb-2">
@@ -173,7 +173,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         </section>
 
         {/* NEXT STEPS */}
-        <section className="bg-slate-900 print:bg-slate-50 text-white print:text-slate-900 p-8 rounded-2xl text-center print:border print:border-slate-200">
+        <section className="bg-slate-900 print:bg-slate-50 text-white print:text-slate-900 p-8 rounded-2xl text-center print:border print:border-slate-200 print:break-inside-avoid">
           <h2 className="text-xl font-bold mb-3">¿Cómo avanzamos?</h2>
           <p className="text-slate-300 print:text-slate-700 font-medium mb-6 max-w-md mx-auto">
             Si la propuesta se adapta a lo que buscás, contactate con tu asesor para confirmar los equipos o coordinar la visita técnica.
@@ -186,74 +186,10 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              document.addEventListener('click', async function(e) {
+              document.addEventListener('click', function(e) {
                 const btn = e.target.closest('#download-pdf-btn');
                 if (btn) {
-                  e.preventDefault();
-                  
-                  const element = document.getElementById('pdf-content');
-                  const originalText = btn.innerHTML;
-                  btn.innerHTML = '⏳ Generando PDF...';
-
-                  // Load scripts sequentially
-                  const loadScript = (src) => new Promise((resolve, reject) => {
-                    if (document.querySelector(\`script[src="\${src}"]\`)) return resolve();
-                    const s = document.createElement('script');
-                    s.src = src;
-                    s.onload = resolve;
-                    s.onerror = reject;
-                    document.head.appendChild(s);
-                  });
-
-                  try {
-                    await loadScript('https://cdn.jsdelivr.net/npm/dom-to-image-more@3.2.0/dist/dom-to-image-more.min.js');
-                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
-
-                    // dom-to-image-more configuration
-                    const scale = 2;
-                    const style = {
-                      transform: 'scale(' + scale + ')',
-                      transformOrigin: 'top left',
-                      width: element.offsetWidth + 'px',
-                      height: element.offsetHeight + 'px'
-                    };
-                    const param = {
-                      height: element.offsetHeight * scale,
-                      width: element.offsetWidth * scale,
-                      quality: 1,
-                      style
-                    };
-
-                    const dataUrl = await window.domtoimage.toPng(element, param);
-                    
-                    const { jsPDF } = window.jspdf;
-                    const pdf = new jsPDF('p', 'mm', 'a4');
-                    
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pageHeight = pdf.internal.pageSize.getHeight();
-                    const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-                    
-                    let heightLeft = pdfHeight;
-                    let position = 0;
-
-                    pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, pdfHeight);
-                    heightLeft -= pageHeight;
-
-                    while (heightLeft >= 0) {
-                      position = heightLeft - pdfHeight;
-                      pdf.addPage();
-                      pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, pdfHeight);
-                      heightLeft -= pageHeight;
-                    }
-
-                    pdf.save('Propuesta_Comercial_${opportunity.customer.name.replace(/\s+/g, '_')}.pdf');
-                    
-                    btn.innerHTML = originalText;
-                  } catch (error) {
-                    console.error(error);
-                    alert('Error al generar PDF: ' + (error.message || error));
-                    btn.innerHTML = originalText;
-                  }
+                  window.print();
                 }
               });
             `,
