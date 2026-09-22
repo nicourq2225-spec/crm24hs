@@ -99,9 +99,9 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         <section className="mb-10">
           <h2 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">2. Solución Recomendada</h2>
           
-          <div className="bg-blue-600 text-white p-6 rounded-2xl shadow-md mb-6">
+          <div className="bg-blue-600 print:bg-blue-50 text-white print:text-blue-900 p-6 rounded-2xl shadow-md mb-6 print:border print:border-blue-200">
             <h3 className="text-2xl font-black">{recommendedSolution || opportunity.productInterest}</h3>
-            <p className="mt-2 text-blue-100 font-medium">Equipamiento oficial diseñado específicamente para tu necesidad.</p>
+            <p className="mt-2 text-blue-100 print:text-blue-800 font-medium">Equipamiento oficial diseñado específicamente para tu necesidad.</p>
           </div>
 
           {opportunity.proposalProducts && (
@@ -173,12 +173,12 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         </section>
 
         {/* NEXT STEPS */}
-        <section className="bg-slate-900 text-white p-8 rounded-2xl text-center">
+        <section className="bg-slate-900 print:bg-slate-50 text-white print:text-slate-900 p-8 rounded-2xl text-center print:border print:border-slate-200">
           <h2 className="text-xl font-bold mb-3">¿Cómo avanzamos?</h2>
-          <p className="text-slate-300 font-medium mb-6 max-w-md mx-auto">
+          <p className="text-slate-300 print:text-slate-700 font-medium mb-6 max-w-md mx-auto">
             Si la propuesta se adapta a lo que buscás, contactate con tu asesor para confirmar los equipos o coordinar la visita técnica.
           </p>
-          <div className="inline-block bg-white text-slate-900 px-6 py-3 rounded-full font-black">
+          <div className="inline-block bg-white print:bg-slate-200 text-slate-900 px-6 py-3 rounded-full font-black">
             Contactar: {opportunity.user.phone || 'Stand Nuevo Centro Shopping'}
           </div>
         </section>
