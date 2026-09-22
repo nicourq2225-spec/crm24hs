@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { AddFollowUpForm, QualificationForm, AlarmInfoForm, ProposalDetailsForm } from '@/components/Forms';
 import { CommercialAssistant } from '@/components/CommercialAssistant';
+import { TrashButton } from '@/components/TrashButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,9 +53,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           const { redirect } = await import('next/navigation');
           redirect('/opportunities');
         }}>
-          <button type="submit" className="text-slate-400 hover:text-red-600 px-3 py-1.5 rounded-lg text-xs flex items-center transition-colors">
-            🗑️ Enviar a papelera
-          </button>
+          <TrashButton />
         </form>
       </div>
 
