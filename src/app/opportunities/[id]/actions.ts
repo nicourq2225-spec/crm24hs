@@ -195,7 +195,7 @@ export async function editCustomerAction(opportunityId: string, formData: FormDa
 
   const name = formData.get('name') as string;
   const phone = formData.get('phone') as string;
-  const type = formData.get('type') as string;
+  const productInterest = formData.get('productInterest') as string;
 
   const opp = await prisma.opportunity.findUnique({ where: { id: opportunityId } });
   if (!opp) throw new Error('Oportunidad no encontrada');
@@ -203,7 +203,11 @@ export async function editCustomerAction(opportunityId: string, formData: FormDa
   await prisma.$transaction(async (tx) => {
     await tx.customer.update({
       where: { id: opp.customerId },
-      data: { name, phone, type }
+      data: { name, phone }
+    });
+    await tx.opportunity.update({
+      where: { id: opportunityId },
+      data: { productInterest }
     });
   });
 

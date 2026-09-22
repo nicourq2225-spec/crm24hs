@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
 import { editCustomerAction } from '../actions';
+import { EditCustomerForm } from '@/components/Forms';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,46 +39,7 @@ export default async function EditCustomerPage({ params }: { params: Promise<{ i
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
         <h1 className="text-2xl font-bold text-slate-900 mb-6">✏️ Editar Cliente</h1>
         
-        <form action={updateAction} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Nombre del Cliente</label>
-            <input 
-              type="text" 
-              name="name" 
-              defaultValue={opportunity.customer.name} 
-              required
-              className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
-            <input 
-              type="text" 
-              name="phone" 
-              defaultValue={opportunity.customer.phone} 
-              required
-              className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Producto de Interés principal</label>
-            <input 
-              type="text" 
-              name="productInterest" 
-              defaultValue={opportunity.productInterest} 
-              required
-              className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
-            />
-          </div>
-
-          <div className="pt-4">
-            <button type="submit" className="w-full bg-blue-600 text-white font-bold p-3 rounded-xl hover:bg-blue-700">
-              GUARDAR CAMBIOS
-            </button>
-          </div>
-        </form>
+        <EditCustomerForm opportunity={opportunity} action={updateAction} />
       </div>
     </div>
   );

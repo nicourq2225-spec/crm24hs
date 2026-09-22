@@ -110,22 +110,31 @@ export function AddFollowUpForm({ opportunityId, currentStatus }: { opportunityI
 
 export function QualificationForm({ opportunity }: { opportunity: any }) {
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setSaved(false);
     await updateQualificationAction(opportunity.id, new FormData(e.currentTarget));
     startTransition(() => {
       router.refresh();
       setLoading(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     });
   };
 
   const targets = opportunity.qTargets || [];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-5 relative">
+      {saved && (
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow-lg animate-bounce text-sm flex items-center gap-2 z-50">
+          <span>✅</span> Guardado correctamente
+        </div>
+      )}
       <div className="grid md:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-bold text-slate-500 uppercase mb-1">¿Para dónde la necesitás?</label>
@@ -223,22 +232,31 @@ export function QualificationForm({ opportunity }: { opportunity: any }) {
 
 export function AlarmInfoForm({ alarmOpportunity, customerId, opportunityId }: { alarmOpportunity: any, customerId: string, opportunityId: string }) {
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setSaved(false);
     await updateAlarmInfoAction(customerId, opportunityId, new FormData(e.currentTarget));
     startTransition(() => {
       router.refresh();
       setLoading(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     });
   };
 
   const opp = alarmOpportunity || {};
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 relative">
+      {saved && (
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow-lg animate-bounce text-sm flex items-center gap-2 z-50">
+          <span>✅</span> Guardado correctamente
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-medium text-slate-500">¿Tiene alarma?</label>
@@ -298,21 +316,30 @@ export function AlarmInfoForm({ alarmOpportunity, customerId, opportunityId }: {
 
 export function ProposalDetailsForm({ opportunity }: { opportunity: any }) {
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
+    setSaved(false);
     const { updateProposalDetailsAction } = await import('@/app/opportunities/[id]/actions');
     await updateProposalDetailsAction(opportunity.id, new FormData(e.currentTarget));
     startTransition(() => {
       router.refresh();
       setLoading(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4 relative">
+      {saved && (
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full font-bold shadow-lg animate-bounce text-sm flex items-center gap-2 z-50">
+          <span>✅</span> Guardado correctamente
+        </div>
+      )}
       <div>
         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Productos y Cantidades</label>
         <textarea name="proposalProducts" defaultValue={opportunity.proposalProducts || ''} rows={3} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-blue-500" placeholder="Ej: 4x Cámaras Bullet Full Color 2MP\n1x DVR 4 Canales\n1x Disco Rígido 1TB" />
@@ -331,9 +358,64 @@ export function ProposalDetailsForm({ opportunity }: { opportunity: any }) {
           <input type="text" name="paymentMethod" defaultValue={opportunity.paymentMethod || ''} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-blue-500" placeholder="Ej: Transferencia / 3 Cuotas" />
         </div>
       </div>
-      <button disabled={loading} type="submit" className="text-sm bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg hover:bg-blue-200 disabled:opacity-50">
-        {loading ? 'Guardando...' : 'Guardar Detalles de Propuesta'}
+      <button disabled={loading} type="submit" className="text-sm bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg hover:bg-blue-200 disabled:opacity-50 transition-all flex items-center gap-2">
+        {loading ? (
+          <><span>⏳</span> Guardando...</>
+        ) : (
+          <><span>💾</span> Guardar Detalles de Propuesta</>
+        )}
       </button>
+    </form>
+  );
+}
+
+export function EditCustomerForm({ opportunity, action }: { opportunity: any, action: any }) {
+  const [loading, setLoading] = useState(false);
+  
+  return (
+    <form action={async (formData) => {
+      setLoading(true);
+      await action(formData);
+    }} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Nombre del Cliente</label>
+        <input 
+          type="text" 
+          name="name" 
+          defaultValue={opportunity.customer.name} 
+          required
+          className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
+        <input 
+          type="text" 
+          name="phone" 
+          defaultValue={opportunity.customer.phone} 
+          required
+          className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Producto de Interés principal</label>
+        <input 
+          type="text" 
+          name="productInterest" 
+          defaultValue={opportunity.productInterest} 
+          required
+          className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
+        />
+      </div>
+      <div className="pt-4">
+        <button disabled={loading} type="submit" className="w-full bg-blue-600 text-white font-bold p-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
+          {loading ? (
+            <><span>⏳</span> GUARDANDO...</>
+          ) : (
+            <><span>💾</span> GUARDAR CAMBIOS</>
+          )}
+        </button>
+      </div>
     </form>
   );
 }
