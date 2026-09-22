@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, startTransition } from 'react';
 import { addFollowUpAction, updateQualificationAction, updateAlarmInfoAction } from '@/app/opportunities/[id]/actions';
 import { useRouter } from 'next/navigation';
 
@@ -116,8 +116,10 @@ export function QualificationForm({ opportunity }: { opportunity: any }) {
     e.preventDefault();
     setLoading(true);
     await updateQualificationAction(opportunity.id, new FormData(e.currentTarget));
-    setLoading(false);
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+      setLoading(false);
+    });
   };
 
   const targets = opportunity.qTargets || [];
@@ -219,16 +221,18 @@ export function QualificationForm({ opportunity }: { opportunity: any }) {
   );
 }
 
-export function AlarmInfoForm({ alarmOpportunity, customerId }: { alarmOpportunity: any, customerId: string }) {
+export function AlarmInfoForm({ alarmOpportunity, customerId, opportunityId }: { alarmOpportunity: any, customerId: string, opportunityId: string }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    await updateAlarmInfoAction(customerId, new FormData(e.currentTarget));
-    setLoading(false);
-    router.refresh();
+    await updateAlarmInfoAction(customerId, opportunityId, new FormData(e.currentTarget));
+    startTransition(() => {
+      router.refresh();
+      setLoading(false);
+    });
   };
 
   const opp = alarmOpportunity || {};
@@ -287,6 +291,48 @@ export function AlarmInfoForm({ alarmOpportunity, customerId }: { alarmOpportuni
       </div>
       <button disabled={loading} type="submit" className="text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-lg disabled:opacity-50">
         {loading ? 'Guardando...' : 'Actualizar Datos de Alarma'}
+      </button>
+    </form>
+  );
+}
+
+export function ProposalDetailsForm({ opportunity }: { opportunity: any }) {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    const { updateProposalDetailsAction } = await import('@/app/opportunities/[id]/actions');
+    await updateProposalDetailsAction(opportunity.id, new FormData(e.currentTarget));
+    startTransition(() => {
+      router.refresh();
+      setLoading(false);
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Productos y Cantidades</label>
+        <textarea name="proposalProducts" defaultValue={opportunity.proposalProducts || ''} rows={3} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-blue-500" placeholder="Ej: 4x Cámaras Bullet Full Color 2MP\n1x DVR 4 Canales\n1x Disco Rígido 1TB" />
+      </div>
+      <div>
+        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Beneficios Extras para el Cliente</label>
+        <textarea name="proposalBenefits" defaultValue={opportunity.proposalBenefits || ''} rows={2} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-blue-500" placeholder="Ej: Visión nocturna a color 24hs. Garantía de 2 años." />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Presupuesto ($)</label>
+          <input type="number" name="budgetValue" defaultValue={opportunity.budgetValue || ''} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-blue-500" placeholder="0.00" />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Forma de Pago</label>
+          <input type="text" name="paymentMethod" defaultValue={opportunity.paymentMethod || ''} className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:border-blue-500" placeholder="Ej: Transferencia / 3 Cuotas" />
+        </div>
+      </div>
+      <button disabled={loading} type="submit" className="text-sm bg-blue-100 text-blue-700 font-bold px-4 py-2 rounded-lg hover:bg-blue-200 disabled:opacity-50">
+        {loading ? 'Guardando...' : 'Guardar Detalles de Propuesta'}
       </button>
     </form>
   );

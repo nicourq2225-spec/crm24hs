@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { AddFollowUpForm, QualificationForm, AlarmInfoForm } from '@/components/Forms';
+import { AddFollowUpForm, QualificationForm, AlarmInfoForm, ProposalDetailsForm } from '@/components/Forms';
 import { CommercialAssistant } from '@/components/CommercialAssistant';
 
 export const dynamic = 'force-dynamic';
@@ -138,7 +138,14 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
               <span>🔐 Oportunidad de Alarma</span>
               {isAlarmOpp && <span className="bg-red-100 text-red-700 text-xs px-2 py-1 rounded font-bold uppercase">Hot Lead</span>}
             </h3>
-            <AlarmInfoForm alarmOpportunity={alarmOpp} customerId={opportunity.customerId} />
+            <AlarmInfoForm alarmOpportunity={alarmOpp} customerId={opportunity.customerId} opportunityId={opportunity.id} />
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+            <h3 className="font-bold text-slate-800 border-b pb-2 flex items-center gap-2">
+              <span>📝 Detalles para Presupuesto</span>
+            </h3>
+            <ProposalDetailsForm opportunity={opportunity} />
           </div>
 
           <AddFollowUpForm opportunityId={opportunity.id} currentStatus={opportunity.status} />

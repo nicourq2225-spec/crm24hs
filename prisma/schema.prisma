@@ -57,6 +57,8 @@ model Opportunity {
   
   // Combos / Solución sugerida
   recommendedSolution String?
+  proposalProducts    String?
+  proposalBenefits    String?
   
   // Motivos de pérdida
   lossReason       String?  // "Precio", "Compró en otro lugar", etc.

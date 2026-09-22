@@ -99,12 +99,30 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         <section className="mb-10">
           <h2 className="text-xl font-bold text-slate-800 border-b border-slate-200 pb-2 mb-4">2. Solución Recomendada</h2>
           
-          <div className="bg-blue-600 text-white p-6 rounded-2xl shadow-md">
+          <div className="bg-blue-600 text-white p-6 rounded-2xl shadow-md mb-6">
             <h3 className="text-2xl font-black">{recommendedSolution || opportunity.productInterest}</h3>
             <p className="mt-2 text-blue-100 font-medium">Equipamiento oficial diseñado específicamente para tu necesidad.</p>
           </div>
 
-          <div className="mt-6 space-y-4">
+          {opportunity.proposalProducts && (
+            <div className="mb-6 bg-slate-50 border border-slate-200 p-5 rounded-xl">
+              <h4 className="font-bold text-slate-800 mb-3 text-sm uppercase tracking-wider">Detalle del Equipamiento</h4>
+              <div className="text-slate-700 whitespace-pre-line text-sm leading-relaxed">
+                {opportunity.proposalProducts}
+              </div>
+            </div>
+          )}
+
+          {opportunity.proposalBenefits && (
+            <div className="mb-6 bg-green-50 border border-green-200 p-5 rounded-xl">
+              <h4 className="font-bold text-green-800 mb-2 text-sm uppercase tracking-wider">Beneficios Incluidos</h4>
+              <div className="text-green-900 whitespace-pre-line text-sm leading-relaxed font-medium">
+                {opportunity.proposalBenefits}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
             <div className="flex gap-4 items-start">
               <div className="text-2xl mt-1">📹</div>
               <div>

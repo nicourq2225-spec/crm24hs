@@ -56,6 +56,14 @@ export function CommercialAssistant({ opportunity, alarmOpp }: { opportunity: an
     }
   }
 
+  const missingOpps = [];
+  if (!qInstallRequired) {
+    missingOpps.push('Preguntar si necesita instalación.');
+  }
+  if (!alarmOpp?.hasAlarm || alarmOpp.hasAlarm === 'No sabe / No seguro') {
+    missingOpps.push('Preguntar si cuenta con alarma en la propiedad.');
+  }
+
   // 5. Próxima acción sugerida
   let suggestedAction = 'Contactar al cliente para relevar necesidad.';
   if (status === 'NUEVO' || status === 'CONTACTADO') suggestedAction = 'Preparar y enviar propuesta personalizada.';
@@ -111,7 +119,7 @@ export function CommercialAssistant({ opportunity, alarmOpp }: { opportunity: an
           <div>
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">Oportunidades Detectadas</span>
             {detectedOpps.length > 0 ? (
-              <ul className="space-y-2">
+              <ul className="space-y-2 mb-3">
                 {detectedOpps.map((opp, i) => (
                   <li key={i} className="text-sm font-bold bg-slate-800 px-3 py-2 rounded-lg text-slate-200 border border-slate-700">
                     {opp}
@@ -119,7 +127,16 @@ export function CommercialAssistant({ opportunity, alarmOpp }: { opportunity: an
                 ))}
               </ul>
             ) : (
-              <span className="text-slate-500 text-sm italic">Ninguna oportunidad extra detectada aún.</span>
+              <span className="text-slate-500 text-sm italic block mb-3">Ninguna oportunidad extra detectada aún.</span>
+            )}
+            
+            {missingOpps.length > 0 && (
+              <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+                <span className="text-xs font-bold text-orange-400 block mb-1">⚠️ Falta relevar:</span>
+                <ul className="list-disc list-inside text-sm text-orange-200">
+                  {missingOpps.map((msg, i) => <li key={i}>{msg}</li>)}
+                </ul>
+              </div>
             )}
           </div>
 

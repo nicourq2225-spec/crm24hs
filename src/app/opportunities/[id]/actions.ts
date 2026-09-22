@@ -118,7 +118,7 @@ export async function updateQualificationAction(opportunityId: string, formData:
   revalidatePath(`/opportunities/${opportunityId}`);
 }
 
-export async function updateAlarmInfoAction(customerId: string, formData: FormData) {
+export async function updateAlarmInfoAction(customerId: string, opportunityId: string, formData: FormData) {
   const hasAlarm = formData.get('hasAlarm') as string;
   const interestLevel = formData.get('interestLevel') as string;
   const propertyType = formData.get('propertyType') as string;
@@ -126,7 +126,6 @@ export async function updateAlarmInfoAction(customerId: string, formData: FormDa
   const nextAction = formData.get('nextAction') as string;
   const status = formData.get('status') as string;
 
-  // Let's find or create the alarm opportunity
   const alarmOpp = await prisma.alarmOpportunity.findFirst({
     where: { customerId }
   });
@@ -144,7 +143,6 @@ export async function updateAlarmInfoAction(customerId: string, formData: FormDa
       }
     });
   } else {
-    // Should exist from new lead, but just in case
     const cookieStore = await cookies();
     const userId = cookieStore.get('userId')?.value || '1';
     await prisma.alarmOpportunity.create({
@@ -161,7 +159,7 @@ export async function updateAlarmInfoAction(customerId: string, formData: FormDa
     });
   }
 
-  revalidatePath(`/opportunities`); // Invalidate everything to be safe since we don't have the opp ID here easily
+  revalidatePath(`/opportunities/${opportunityId}`);
 }
 
 export async function moveToTrashAction(opportunityId: string) {
@@ -207,6 +205,27 @@ export async function editCustomerAction(opportunityId: string, formData: FormDa
       where: { id: opp.customerId },
       data: { name, phone, type }
     });
+  });
+
+  revalidatePath(`/opportunities/${opportunityId}`);
+}
+
+export async function updateProposalDetailsAction(opportunityId: string, formData: FormData) {
+  const proposalProducts = formData.get('proposalProducts') as string;
+  const proposalBenefits = formData.get('proposalBenefits') as string;
+  const budgetValueStr = formData.get('budgetValue') as string;
+  const paymentMethod = formData.get('paymentMethod') as string;
+  
+  const budgetValue = budgetValueStr ? parseFloat(budgetValueStr) : null;
+
+  await prisma.opportunity.update({
+    where: { id: opportunityId },
+    data: {
+      proposalProducts,
+      proposalBenefits,
+      budgetValue,
+      paymentMethod,
+    }
   });
 
   revalidatePath(`/opportunities/${opportunityId}`);
