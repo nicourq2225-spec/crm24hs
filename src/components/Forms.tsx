@@ -388,7 +388,7 @@ export function EditCustomerForm({ opportunity, action }: { opportunity: any, ac
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono (WhatsApp)</label>
         <input 
           type="text" 
           name="phone" 
@@ -398,14 +398,40 @@ export function EditCustomerForm({ opportunity, action }: { opportunity: any, ac
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Producto de Interés principal</label>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Cliente</label>
+        <select name="type" defaultValue={opportunity.customer.type || 'PARTICULAR'} className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500">
+          <option value="PARTICULAR">Particular</option>
+          <option value="NEGOCIO">Negocio</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Qué necesita (Resumen Rápido)</label>
         <input 
           type="text" 
-          name="productInterest" 
-          defaultValue={opportunity.productInterest} 
-          required
+          name="quickNeed" 
+          defaultValue={opportunity.quickNeed || ''}
           className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500" 
         />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Producto Principal</label>
+        <select name="productInterest" defaultValue={opportunity.productInterest || 'Cámara de seguridad'} className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500">
+          <option value="Cámara de seguridad">Cámara de seguridad</option>
+          <option value="Kit Cámaras">Kit Cámaras</option>
+          <option value="Cerradura Inteligente">Cerradura Inteligente</option>
+          <option value="Videoportero">Videoportero</option>
+          <option value="Alarma">Alarma</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">¿Cuándo piensa comprar? (Urgencia)</label>
+        <select name="urgency" defaultValue={opportunity.urgency || 'ESTA_SEMANA'} className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500">
+          <option value="HOY">🔥 Hoy</option>
+          <option value="ESTA_SEMANA">⚡ Esta semana</option>
+          <option value="ESTE_MES">📅 Este mes</option>
+          <option value="MAS_ADELANTE">⏳ Más adelante</option>
+        </select>
       </div>
       <div className="pt-4">
         <button disabled={loading} type="submit" className="w-full bg-blue-600 text-white font-bold p-3 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
