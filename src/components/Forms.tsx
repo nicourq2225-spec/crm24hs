@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, startTransition } from 'react';
-import { addFollowUpAction, updateQualificationAction, updateAlarmInfoAction } from '@/app/opportunities/[id]/actions';
+import { addFollowUpAction, updateQualificationAction, updateAlarmInfoAction, updateProposalDetailsAction } from '@/app/opportunities/[id]/actions';
 import { useRouter } from 'next/navigation';
 
 export function AddFollowUpForm({ opportunityId, currentStatus }: { opportunityId: string, currentStatus: string }) {
@@ -323,7 +323,6 @@ export function ProposalDetailsForm({ opportunity }: { opportunity: any }) {
     e.preventDefault();
     setLoading(true);
     setSaved(false);
-    const { updateProposalDetailsAction } = await import('@/app/opportunities/[id]/actions');
     await updateProposalDetailsAction(opportunity.id, new FormData(e.currentTarget));
     startTransition(() => {
       router.refresh();
