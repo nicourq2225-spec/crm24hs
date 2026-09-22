@@ -32,10 +32,16 @@ export default async function DashboardPage() {
 
   // Filters
   const nuevosLeads = opportunities.filter(o => o.status === 'NUEVO');
-  const seguimientosPendientes = opportunities.filter(o => 
+  const seguimientosHoy = opportunities.filter(o => 
     !['GANADO', 'PERDIDO', 'NUTRICION'].includes(o.status) &&
     o.nextFollowUp &&
-    (isToday(o.nextFollowUp) || isPast(o.nextFollowUp))
+    isToday(o.nextFollowUp)
+  ).sort((a, b) => new Date(a.nextFollowUp!).getTime() - new Date(b.nextFollowUp!).getTime());
+
+  const seguimientosAtrasados = opportunities.filter(o => 
+    !['GANADO', 'PERDIDO', 'NUTRICION'].includes(o.status) &&
+    o.nextFollowUp &&
+    isPast(o.nextFollowUp) && !isToday(o.nextFollowUp)
   ).sort((a, b) => new Date(a.nextFollowUp!).getTime() - new Date(b.nextFollowUp!).getTime());
 
   const propuestasPendientes = opportunities.filter(o => o.status === 'PROPUESTA_ENVIADA');
@@ -71,9 +77,17 @@ export default async function DashboardPage() {
           <div className="text-slate-500 font-bold text-xs tracking-wider mb-1">NUEVOS LEADS</div>
           <div className="text-4xl font-black text-blue-600">{nuevosLeads.length}</div>
         </div>
-        <div className="bg-red-50 p-5 rounded-2xl shadow-sm border border-red-200">
-          <div className="text-red-600 font-bold text-xs tracking-wider mb-1">SEGUIMIENTOS DE HOY</div>
-          <div className="text-4xl font-black text-red-700">{seguimientosPendientes.length}</div>
+        <div className="bg-red-50 p-5 rounded-2xl shadow-sm border border-red-200 flex justify-between items-end">
+          <div>
+            <div className="text-red-600 font-bold text-xs tracking-wider mb-1">HOY</div>
+            <div className="text-4xl font-black text-red-700">{seguimientosHoy.length}</div>
+          </div>
+          {seguimientosAtrasados.length > 0 && (
+            <div className="text-right">
+              <div className="text-red-800 font-bold text-[10px] tracking-wider mb-1">ATRASADOS</div>
+              <div className="text-2xl font-black text-red-900">{seguimientosAtrasados.length}</div>
+            </div>
+          )}
         </div>
         <div className="bg-orange-50 p-5 rounded-2xl shadow-sm border border-orange-200">
           <div className="text-orange-600 font-bold text-xs tracking-wider mb-1">HOT LEADS</div>
@@ -88,15 +102,17 @@ export default async function DashboardPage() {
       <div className="grid lg:grid-cols-2 gap-8">
         
         <div className="space-y-6">
+          
+          {/* SEGUIMIENTOS DE HOY */}
           <div>
             <h2 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
-              <span>🔔</span> Seguimientos Pendientes
+              <span>📅</span> Seguimientos de Hoy
             </h2>
             <div className="space-y-3">
-              {seguimientosPendientes.length === 0 ? (
-                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center text-slate-500 text-sm font-medium">No hay seguimientos para hoy.</div>
-              ) : seguimientosPendientes.map(opp => (
-                <a key={opp.id} href={`/opportunities/${opp.id}`} className="block bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-colors">
+              {seguimientosHoy.length === 0 ? (
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl text-center text-slate-500 text-sm font-medium">¡Estás al día! No hay seguimientos para hoy.</div>
+              ) : seguimientosHoy.map(opp => (
+                <a key={opp.id} href={`/opportunities/${opp.id}`} className="block bg-white p-4 rounded-xl shadow-sm border border-blue-200 border-l-4 border-l-blue-500 hover:border-blue-400 transition-colors">
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-bold text-slate-800">{opp.customer.name}</span>
                     <span className={`text-xs font-bold px-2 py-1 rounded ${opp.priority === 'ALTA' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>{opp.priority}</span>
@@ -104,12 +120,35 @@ export default async function DashboardPage() {
                   <div className="text-sm font-medium text-slate-600 mb-2">{opp.nextAction || 'Sin acción definida'}</div>
                   <div className="flex gap-2 text-xs font-bold text-slate-400">
                     <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{opp.status}</span>
-                    <span>{opp.nextFollowUp ? format(new Date(opp.nextFollowUp), 'dd/MM/yyyy') : ''}</span>
                   </div>
                 </a>
               ))}
             </div>
           </div>
+
+          {/* SEGUIMIENTOS ATRASADOS */}
+          {seguimientosAtrasados.length > 0 && (
+            <div>
+              <h2 className="text-xl font-black text-red-700 mb-4 flex items-center gap-2">
+                <span>⚠️</span> Seguimientos Atrasados
+              </h2>
+              <div className="space-y-3">
+                {seguimientosAtrasados.map(opp => (
+                  <a key={opp.id} href={`/opportunities/${opp.id}`} className="block bg-white p-4 rounded-xl shadow-sm border border-red-200 border-l-4 border-l-red-500 hover:border-red-400 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-bold text-slate-800">{opp.customer.name}</span>
+                      <span className={`text-xs font-bold px-2 py-1 rounded ${opp.priority === 'ALTA' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>{opp.priority}</span>
+                    </div>
+                    <div className="text-sm font-medium text-slate-600 mb-2">{opp.nextAction || 'Sin acción definida'}</div>
+                    <div className="flex justify-between items-center text-xs font-bold">
+                      <span className="bg-red-50 text-red-700 px-2 py-0.5 rounded">{opp.status}</span>
+                      <span className="text-red-500 bg-red-50 px-2 py-1 rounded-full">Atrasado: {opp.nextFollowUp ? format(new Date(opp.nextFollowUp), 'dd/MM/yyyy') : ''}</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div>
             <h2 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
