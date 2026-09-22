@@ -205,15 +205,46 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
                   });
 
                   try {
-                    await loadScript('https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.3/dist/html2canvas.min.js');
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
-                    // Use html2canvas-pro which supports modern CSS and okLCH without the SVG bugs
+                    // Preemptively inject safe hex colors to avoid html2canvas 1.4.1 crashing on Tailwind v4 oklch/lab colors
+                    const safeStyle = document.createElement('style');
+                    safeStyle.id = 'pdf-safe-colors';
+                    safeStyle.innerHTML = \`
+                      #pdf-content * { border-color: #e2e8f0 !important; }
+                      #pdf-content .bg-slate-900 { background-color: #0f172a !important; color: #ffffff !important; }
+                      #pdf-content .bg-blue-700 { background-color: #1d4ed8 !important; }
+                      #pdf-content .bg-blue-600 { background-color: #2563eb !important; color: #ffffff !important; }
+                      #pdf-content .text-blue-900 { color: #1e3a8a !important; }
+                      #pdf-content .text-slate-800 { color: #1e293b !important; }
+                      #pdf-content .text-slate-700 { color: #334155 !important; }
+                      #pdf-content .text-slate-600 { color: #475569 !important; }
+                      #pdf-content .text-slate-500 { color: #64748b !important; }
+                      #pdf-content .text-slate-400 { color: #94a3b8 !important; }
+                      #pdf-content .text-slate-300 { color: #cbd5e1 !important; }
+                      #pdf-content .bg-slate-50 { background-color: #f8fafc !important; }
+                      #pdf-content .bg-white { background-color: #ffffff !important; }
+                      #pdf-content .text-white { color: #ffffff !important; }
+                      #pdf-content .bg-green-50 { background-color: #f0fdf4 !important; }
+                      #pdf-content .text-green-900 { color: #14532d !important; }
+                      #pdf-content .text-green-800 { color: #166534 !important; }
+                      #pdf-content .bg-blue-50 { background-color: #eff6ff !important; }
+                      #pdf-content .text-blue-100 { color: #d0e8ff !important; }
+                    \`;
+                    document.head.appendChild(safeStyle);
+
+                    // Allow a tiny delay for browser to apply the styles
+                    await new Promise(res => setTimeout(res, 50));
+
                     const canvas = await window.html2canvas(element, { 
                       scale: 2, 
                       useCORS: true,
                       logging: false
                     });
+
+                    // Remove safe styles immediately after capture
+                    document.head.removeChild(safeStyle);
 
                     const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
                     
@@ -231,54 +262,13 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
                     
                     btn.innerHTML = originalText;
                   } catch (error) {
-                    if (error.toString().includes('unsupported color function')) {
-                       // Fallback: Temporarily inject safe hex colors to bypass Tailwind v4 oklch crash
-                       const safeStyle = document.createElement('style');
-                       safeStyle.id = 'pdf-safe-colors';
-                       safeStyle.innerHTML = \`
-                         #pdf-content * { border-color: #e2e8f0 !important; }
-                         #pdf-content .bg-slate-900 { background-color: #0f172a !important; color: #ffffff !important; }
-                         #pdf-content .bg-blue-700 { background-color: #1d4ed8 !important; }
-                         #pdf-content .bg-blue-600 { background-color: #2563eb !important; color: #ffffff !important; }
-                         #pdf-content .text-blue-900 { color: #1e3a8a !important; }
-                         #pdf-content .text-slate-800 { color: #1e293b !important; }
-                         #pdf-content .text-slate-700 { color: #334155 !important; }
-                         #pdf-content .text-slate-600 { color: #475569 !important; }
-                         #pdf-content .text-slate-500 { color: #64748b !important; }
-                         #pdf-content .text-slate-400 { color: #94a3b8 !important; }
-                         #pdf-content .text-slate-300 { color: #cbd5e1 !important; }
-                         #pdf-content .bg-slate-50 { background-color: #f8fafc !important; }
-                         #pdf-content .bg-white { background-color: #ffffff !important; }
-                         #pdf-content .text-white { color: #ffffff !important; }
-                         #pdf-content .bg-green-50 { background-color: #f0fdf4 !important; }
-                         #pdf-content .text-green-900 { color: #14532d !important; }
-                         #pdf-content .text-green-800 { color: #166534 !important; }
-                         #pdf-content .bg-blue-50 { background-color: #eff6ff !important; }
-                         #pdf-content .text-blue-100 { color: #d0e8ff !important; }
-                       \`;
-                       document.head.appendChild(safeStyle);
-                       
-                       // Try again with safe colors
-                       window.html2canvas(element, { scale: 2, useCORS: true, logging: false }).then(canvasFallback => {
-                         const dataUrlF = canvasFallback.toDataURL('image/jpeg', 0.98);
-                         const { jsPDF } = window.jspdf;
-                         const pdfWidthF = 210;
-                         const pdfHeightF = (canvasFallback.height * pdfWidthF) / canvasFallback.width;
-                         const pdfF = new jsPDF('p', 'mm', [pdfWidthF, pdfHeightF]);
-                         pdfF.addImage(dataUrlF, 'JPEG', 0, 0, pdfWidthF, pdfHeightF);
-                         pdfF.save('Propuesta_Comercial_${opportunity.customer.name.replace(/\s+/g, '_')}.pdf');
-                         document.head.removeChild(safeStyle);
-                         btn.innerHTML = originalText;
-                       }).catch(err2 => {
-                         document.head.removeChild(safeStyle);
-                         alert('Error en fallback: ' + err2);
-                         btn.innerHTML = originalText;
-                       });
-                    } else {
-                      console.error(error);
-                      alert('Error al generar PDF: ' + (error.message || error));
-                      btn.innerHTML = originalText;
+                    if (document.getElementById('pdf-safe-colors')) {
+                      document.head.removeChild(document.getElementById('pdf-safe-colors'));
                     }
+                    console.error(error);
+                    const msg = error instanceof Event ? 'No se pudo cargar la librería desde internet. Revisa tu conexión.' : (error.message || error);
+                    alert('Error al generar PDF: ' + msg);
+                    btn.innerHTML = originalText;
                   }
                 }
               });
