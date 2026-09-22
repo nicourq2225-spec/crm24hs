@@ -59,32 +59,24 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-6xl mx-auto p-4 pb-24 space-y-8">
       
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900">HOY</h1>
-          <p className="text-slate-500 font-medium">{format(new Date(), "EEEE d 'de' MMMM", { locale: es })}</p>
-        </div>
-        
-        <div className="flex gap-2 w-full md:w-auto">
-          <a href="/opportunities/new" className="bg-slate-900 text-white w-full md:w-auto px-6 py-3 rounded-xl font-bold text-sm shadow-md hover:bg-blue-700 transition-all text-center">
-            + NUEVO CLIENTE
-          </a>
-        </div>
-      </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
-          <div className="text-slate-500 font-bold text-xs tracking-wider mb-1">NUEVOS LEADS</div>
-          <div className="text-4xl font-black text-blue-600">{nuevosLeads.length}</div>
+      <header className="mb-8">
+        <h1 className="text-3xl font-black text-slate-800 tracking-tight">Dashboard, {currentUser.name}</h1>
+        <p className="text-slate-500 font-medium mt-1">Resumen de tu actividad y oportunidades abiertas.</p>
+      </header>
+
+      {/* OVERVIEW CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-blue-50 p-5 rounded-2xl shadow-sm border border-blue-200">
+          <div className="text-blue-600 font-bold text-xs tracking-wider mb-1">NUEVOS (HOY)</div>
+          <div className="text-4xl font-black text-blue-700">{nuevosLeads.length}</div>
         </div>
-        <div className="bg-red-50 p-5 rounded-2xl shadow-sm border border-red-200 flex justify-between items-end">
-          <div>
-            <div className="text-red-600 font-bold text-xs tracking-wider mb-1">HOY</div>
-            <div className="text-4xl font-black text-red-700">{seguimientosHoy.length}</div>
-          </div>
-          {seguimientosAtrasados.length > 0 && (
-            <div className="text-right">
-              <div className="text-red-800 font-bold text-[10px] tracking-wider mb-1">ATRASADOS</div>
+        <div className="bg-red-50 p-5 rounded-2xl shadow-sm border border-red-200">
+          <div className="text-red-600 font-bold text-xs tracking-wider mb-1">ATRASADOS</div>
+          {seguimientosAtrasados.length === 0 ? (
+            <div className="text-sm font-bold text-green-600 mt-2 flex items-center gap-1">¡Al día! ✨</div>
+          ) : (
+            <div className="flex items-center gap-3">
               <div className="text-2xl font-black text-red-900">{seguimientosAtrasados.length}</div>
             </div>
           )}
@@ -152,7 +144,7 @@ export default async function DashboardPage() {
 
           <div>
             <h2 className="text-xl font-black text-slate-800 mb-4 flex items-center gap-2">
-              <span>🆕</span> Nuevos Leads (Sin gestionar)
+              <span>🚀</span> Nuevos Leads (Sin gestionar)
             </h2>
             <div className="space-y-3">
               {nuevosLeads.length === 0 ? (
@@ -164,7 +156,7 @@ export default async function DashboardPage() {
                       <div className="font-bold text-slate-800">{opp.customer.name}</div>
                       <div className="text-sm font-medium text-slate-500">{opp.customer.phone}</div>
                     </div>
-                    <span className="text-xs bg-slate-900 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm">GESTIONAR →</span>
+                    <span className="text-xs bg-slate-900 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm">GESTIONAR ➔</span>
                   </div>
                 </a>
               ))}
@@ -197,7 +189,7 @@ export default async function DashboardPage() {
 
           <div>
             <h2 className="text-xl font-black text-purple-700 mb-4 flex items-center gap-2">
-              <span>🔐</span> Embudo de Alarmas
+              <span>🛡️</span> Embudo de Alarmas
             </h2>
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-purple-200 space-y-4">
               <div className="flex justify-between items-center border-b border-slate-100 pb-3">
