@@ -56,6 +56,142 @@ export default async function DashboardPage() {
 
   const alarmasInteresados = alarmOpps.filter(a => ['Alto', 'Medio'].includes(a.interestLevel || ''));
 
+  // For Admins, we return a completely different dashboard
+  if (currentUser.role === 'ADMIN' || currentUser.name === 'Administrador') {
+    const allUsers = await prisma.user.findMany();
+    
+    // Admin Metrics
+    const totalLeads = opportunities.length;
+    const oppsGanados = opportunities.filter(o => o.status === 'GANADO');
+    const oppsPerdidos = opportunities.filter(o => o.status === 'PERDIDO' || o.status === 'Papelera');
+    const oppsAbiertos = opportunities.filter(o => !['GANADO', 'PERDIDO', 'Papelera'].includes(o.status));
+    
+    const winRate = (oppsGanados.length + oppsPerdidos.length) > 0 
+      ? Math.round((oppsGanados.length / (oppsGanados.length + oppsPerdidos.length)) * 100) 
+      : 0;
+
+    const totalVendido = oppsGanados.reduce((acc, curr) => acc + (curr.budgetValue || 0), 0);
+    const pipelineEsperado = oppsAbiertos.reduce((acc, curr) => acc + (curr.budgetValue || 0), 0);
+
+    // Funnel data
+    const funnel = {
+      nuevos: opportunities.filter(o => o.status === 'NUEVO').length,
+      contactados: opportunities.filter(o => o.status === 'CONTACTADO' || o.status === 'NECESIDAD_IDENTIFICADA').length,
+      presupuestos: opportunities.filter(o => o.status === 'PROPUESTA_ENVIADA' || o.status === 'SEGUIMIENTO').length,
+      ganados: oppsGanados.length,
+    };
+    const maxFunnel = Math.max(funnel.nuevos, funnel.contactados, funnel.presupuestos, funnel.ganados) || 1;
+
+    // Seller performance
+    const sellersPerformance = allUsers.map(user => {
+      const userOpps = opportunities.filter(o => o.userId === user.id);
+      const won = userOpps.filter(o => o.status === 'GANADO');
+      const lost = userOpps.filter(o => o.status === 'PERDIDO' || o.status === 'Papelera');
+      const open = userOpps.filter(o => !['GANADO', 'PERDIDO', 'Papelera'].includes(o.status));
+      const revenue = won.reduce((acc, curr) => acc + (curr.budgetValue || 0), 0);
+      const wr = (won.length + lost.length) > 0 ? Math.round((won.length / (won.length + lost.length)) * 100) : 0;
+      
+      return { id: user.id, name: user.name, total: userOpps.length, open: open.length, won: won.length, revenue, winRate: wr };
+    }).sort((a, b) => b.revenue - a.revenue);
+
+    return (
+      <div className="max-w-6xl mx-auto p-4 pb-24 space-y-8">
+        <header className="mb-8">
+          <h1 className="text-3xl font-black text-slate-800 tracking-tight">Panel de Control (Jefe de Ventas)</h1>
+          <p className="text-slate-500 font-medium mt-1">Métricas clave, rendimiento del equipo y proyecciones.</p>
+        </header>
+
+        {/* TOP KPI CARDS */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div className="text-slate-500 font-bold text-xs tracking-wider mb-1">TOTAL VENDIDO</div>
+            <div className="text-3xl font-black text-green-600">${totalVendido.toLocaleString('es-AR')}</div>
+            <div className="text-xs text-slate-400 mt-2 font-medium">{oppsGanados.length} negocios cerrados</div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div className="text-slate-500 font-bold text-xs tracking-wider mb-1">PIPELINE ESPERADO</div>
+            <div className="text-3xl font-black text-blue-600">${pipelineEsperado.toLocaleString('es-AR')}</div>
+            <div className="text-xs text-slate-400 mt-2 font-medium">{oppsAbiertos.length} negocios abiertos</div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div className="text-slate-500 font-bold text-xs tracking-wider mb-1">TASA DE CONVERSIÓN</div>
+            <div className="text-3xl font-black text-purple-600">{winRate}%</div>
+            <div className="text-xs text-slate-400 mt-2 font-medium">De las oportunidades gestionadas</div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div className="text-slate-500 font-bold text-xs tracking-wider mb-1">TOTAL LEADS</div>
+            <div className="text-3xl font-black text-slate-800">{totalLeads}</div>
+            <div className="text-xs text-slate-400 mt-2 font-medium">Leads ingresados en total</div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* SALES FUNNEL CHART */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
+              📊 Embudo de Ventas Global
+            </h2>
+            <div className="space-y-5">
+              {[
+                { label: '1. Nuevos / Sin Tocar', value: funnel.nuevos, color: 'bg-slate-300' },
+                { label: '2. Contactados / En Análisis', value: funnel.contactados, color: 'bg-blue-400' },
+                { label: '3. Presupuesto Enviado', value: funnel.presupuestos, color: 'bg-orange-400' },
+                { label: '4. Ganados (Cerrados)', value: funnel.ganados, color: 'bg-green-500' }
+              ].map((step, idx) => (
+                <div key={idx}>
+                  <div className="flex justify-between text-sm font-bold text-slate-600 mb-1">
+                    <span>{step.label}</span>
+                    <span>{step.value}</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                    <div className={`${step.color} h-3 rounded-full transition-all`} style={{ width: `${(step.value / maxFunnel) * 100}%` }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* PERFORMANCE BY SELLER */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 className="text-lg font-black text-slate-800 mb-6 flex items-center gap-2">
+              🏆 Rendimiento por Asesor
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="text-slate-400 border-b border-slate-100">
+                    <th className="pb-3 font-bold">Asesor</th>
+                    <th className="pb-3 font-bold text-center">Abiertos</th>
+                    <th className="pb-3 font-bold text-center">Cerrados</th>
+                    <th className="pb-3 font-bold text-right">Facturación</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {sellersPerformance.map(seller => (
+                    <tr key={seller.id}>
+                      <td className="py-3">
+                        <div className="font-bold text-slate-800">{seller.name}</div>
+                        <div className="text-xs text-slate-500 font-medium">Conv: {seller.winRate}%</div>
+                      </td>
+                      <td className="py-3 text-center font-medium text-blue-600">{seller.open}</td>
+                      <td className="py-3 text-center font-medium text-green-600">{seller.won}</td>
+                      <td className="py-3 text-right font-black text-slate-800">${seller.revenue.toLocaleString('es-AR')}</td>
+                    </tr>
+                  ))}
+                  {sellersPerformance.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="py-6 text-center text-slate-500 font-medium">No hay datos de vendedores</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-4 pb-24 space-y-8">
       
