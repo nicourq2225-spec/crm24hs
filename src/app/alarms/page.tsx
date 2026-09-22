@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import prisma from '@/lib/db';
-import { OpportunityCard } from '@/components/OpportunityCard';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,13 +13,10 @@ export default async function AlarmsPage() {
   const currentUser = await prisma.user.findUnique({ where: { id: userId } });
   if (!currentUser) redirect('/login');
 
-  // Buscar oportunidades de clientes que compraron cámaras o kits, no tienen alarma, pero son potenciales
-  const alarmOpportunities = await prisma.opportunity.findMany({
+  const alarmOpportunities = await prisma.alarmOpportunity.findMany({
     where: {
-      status: { not: 'Papelera' },
-      hasAlarm: { in: ['No', 'No sabe'] },
-      alarmOpportunity: { in: ['Potencial', 'Ofrecer'] },
-      ...(currentUser.role !== 'ADMIN' ? { userId: currentUser.id } : {})
+      status: { not: 'PERDIDO' },
+      ...(currentUser.role !== 'ADMIN' && currentUser.name !== 'Administrador' ? { userId: currentUser.id } : {})
     },
     include: {
       customer: true,
@@ -35,18 +32,30 @@ export default async function AlarmsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-            <span className="text-3xl">🛡️</span> Potenciales de Alarma
+            <span className="text-3xl">🛡️</span> Embudo de Alarmas
           </h1>
-          <p className="text-slate-500 mt-1">Clientes que pueden estar interesados en el servicio de monitoreo.</p>
+          <p className="text-slate-500 mt-1">Gestión de potenciales clientes y ventas de monitoreo.</p>
         </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
         {alarmOpportunities.length === 0 ? (
-          <p className="text-slate-500 col-span-full bg-white p-6 text-center rounded-xl border border-slate-200">No hay clientes potenciales para ofrecer alarma en este momento.</p>
+          <p className="text-slate-500 col-span-full bg-white p-6 text-center rounded-xl border border-slate-200">No hay clientes de alarma activos en este momento.</p>
         ) : (
           alarmOpportunities.map(opp => (
-            <OpportunityCard key={opp.id} opportunity={opp} highlight={opp.alarmOpportunity === 'Ofrecer' ? 'yellow' : undefined} />
+            <div key={opp.id} className="block bg-white p-4 rounded-xl shadow-sm border border-purple-200 border-l-4 border-l-purple-500">
+              <div className="flex justify-between items-start mb-2">
+                <span className="font-bold text-slate-800">{opp.customer.name}</span>
+                <span className={`text-xs font-bold px-2 py-1 rounded ${opp.priority === 'ALTA' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>{opp.priority}</span>
+              </div>
+              <div className="text-sm font-medium text-slate-600 mb-2">
+                Interés: {opp.interestLevel || 'Sin definir'} <br/>
+                Monitoreo: {opp.monitoringInterest || 'Sin definir'}
+              </div>
+              <div className="flex justify-between items-center text-xs font-bold">
+                <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded">{opp.status}</span>
+              </div>
+            </div>
           ))
         )}
       </div>
