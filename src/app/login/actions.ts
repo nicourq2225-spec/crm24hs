@@ -23,7 +23,7 @@ export async function loginAction(userId: string, password?: string) {
   cookieStore.set('userId', userId, { 
     secure: process.env.NODE_ENV === 'production', 
     path: '/', 
-    maxAge: 60 * 60 * 24 * 30 // 30 días
+    maxAge: 60 * 30 // 30 minutos
   });
   
   return { success: true };
