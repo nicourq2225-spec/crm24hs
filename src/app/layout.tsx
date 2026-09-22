@@ -28,7 +28,7 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.className} bg-slate-50 text-slate-900`}>
         {userId && (
-          <nav className="bg-slate-900 text-white fixed bottom-0 left-0 w-full md:w-64 md:h-screen md:top-0 md:bottom-auto z-50">
+          <nav className="bg-slate-900 text-white fixed bottom-0 left-0 w-full md:w-64 md:h-screen md:top-0 md:bottom-auto z-50 print:hidden">
             <div className="flex md:flex-col justify-around md:justify-start p-3 md:p-6 h-16 md:h-full gap-4">
               <div className="hidden md:block mb-8">
                 <h2 className="font-black text-xl text-blue-400">24HS SECURITY</h2>
@@ -71,7 +71,7 @@ export default async function RootLayout({
             </div>
           </nav>
         )}
-        <main className={`min-h-screen ${userId ? 'md:ml-64' : ''}`}>
+        <main className={`min-h-screen ${userId ? 'md:ml-64 print:m-0' : ''}`}>
           {children}
         </main>
         <script
