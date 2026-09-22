@@ -205,43 +205,80 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
                   });
 
                   try {
-                    await loadScript('https://cdn.jsdelivr.net/npm/dom-to-image-more@3.2.0/dist/dom-to-image-more.min.js');
+                    await loadScript('https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.3/dist/html2canvas.min.js');
                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
 
-                    // Use scale 3 for ultra-crisp text (approx 300 DPI)
-                    const scale = 3;
-                    const style = {
-                      transform: 'scale(' + scale + ')',
-                      transformOrigin: 'top left',
-                      width: element.offsetWidth + 'px',
-                      height: element.offsetHeight + 'px'
-                    };
-                    const param = {
-                      height: element.offsetHeight * scale,
-                      width: element.offsetWidth * scale,
-                      quality: 1,
-                      style
-                    };
+                    // Use html2canvas-pro which supports modern CSS and okLCH without the SVG bugs
+                    const canvas = await window.html2canvas(element, { 
+                      scale: 2, 
+                      useCORS: true,
+                      logging: false
+                    });
 
-                    const dataUrl = await window.domtoimage.toPng(element, param);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
                     
                     const { jsPDF } = window.jspdf;
                     
                     // We calculate the exact height in mm to make a SINGLE continuous page
                     const pdfWidth = 210; // A4 width in mm
-                    const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
                     
                     // Create a PDF with a custom page size (width, height)
                     const pdf = new jsPDF('p', 'mm', [pdfWidth, pdfHeight]);
                     
-                    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.addImage(dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
                     pdf.save('Propuesta_Comercial_${opportunity.customer.name.replace(/\s+/g, '_')}.pdf');
                     
                     btn.innerHTML = originalText;
                   } catch (error) {
-                    console.error(error);
-                    alert('Error al generar PDF: ' + (error.message || error));
-                    btn.innerHTML = originalText;
+                    if (error.toString().includes('unsupported color function')) {
+                       // Fallback: Temporarily inject safe hex colors to bypass Tailwind v4 oklch crash
+                       const safeStyle = document.createElement('style');
+                       safeStyle.id = 'pdf-safe-colors';
+                       safeStyle.innerHTML = \`
+                         #pdf-content * { border-color: #e2e8f0 !important; }
+                         #pdf-content .bg-slate-900 { background-color: #0f172a !important; color: #ffffff !important; }
+                         #pdf-content .bg-blue-700 { background-color: #1d4ed8 !important; }
+                         #pdf-content .bg-blue-600 { background-color: #2563eb !important; color: #ffffff !important; }
+                         #pdf-content .text-blue-900 { color: #1e3a8a !important; }
+                         #pdf-content .text-slate-800 { color: #1e293b !important; }
+                         #pdf-content .text-slate-700 { color: #334155 !important; }
+                         #pdf-content .text-slate-600 { color: #475569 !important; }
+                         #pdf-content .text-slate-500 { color: #64748b !important; }
+                         #pdf-content .text-slate-400 { color: #94a3b8 !important; }
+                         #pdf-content .text-slate-300 { color: #cbd5e1 !important; }
+                         #pdf-content .bg-slate-50 { background-color: #f8fafc !important; }
+                         #pdf-content .bg-white { background-color: #ffffff !important; }
+                         #pdf-content .text-white { color: #ffffff !important; }
+                         #pdf-content .bg-green-50 { background-color: #f0fdf4 !important; }
+                         #pdf-content .text-green-900 { color: #14532d !important; }
+                         #pdf-content .text-green-800 { color: #166534 !important; }
+                         #pdf-content .bg-blue-50 { background-color: #eff6ff !important; }
+                         #pdf-content .text-blue-100 { color: #d0e8ff !important; }
+                       \`;
+                       document.head.appendChild(safeStyle);
+                       
+                       // Try again with safe colors
+                       window.html2canvas(element, { scale: 2, useCORS: true, logging: false }).then(canvasFallback => {
+                         const dataUrlF = canvasFallback.toDataURL('image/jpeg', 0.98);
+                         const { jsPDF } = window.jspdf;
+                         const pdfWidthF = 210;
+                         const pdfHeightF = (canvasFallback.height * pdfWidthF) / canvasFallback.width;
+                         const pdfF = new jsPDF('p', 'mm', [pdfWidthF, pdfHeightF]);
+                         pdfF.addImage(dataUrlF, 'JPEG', 0, 0, pdfWidthF, pdfHeightF);
+                         pdfF.save('Propuesta_Comercial_${opportunity.customer.name.replace(/\s+/g, '_')}.pdf');
+                         document.head.removeChild(safeStyle);
+                         btn.innerHTML = originalText;
+                       }).catch(err2 => {
+                         document.head.removeChild(safeStyle);
+                         alert('Error en fallback: ' + err2);
+                         btn.innerHTML = originalText;
+                       });
+                    } else {
+                      console.error(error);
+                      alert('Error al generar PDF: ' + (error.message || error));
+                      btn.innerHTML = originalText;
+                    }
                   }
                 }
               });
