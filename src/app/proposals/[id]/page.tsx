@@ -43,7 +43,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
           id="download-pdf-btn"
           className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full font-bold shadow transition-colors flex items-center gap-2 whitespace-nowrap"
         >
-          🖨️ Generar PDF
+          📄 Descargar PDF
         </button>
       </div>
 
@@ -186,10 +186,74 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         <script
           dangerouslySetInnerHTML={{
             __html: `
-              document.addEventListener('click', function(e) {
+              document.addEventListener('click', async function(e) {
                 const btn = e.target.closest('#download-pdf-btn');
                 if (btn) {
-                  window.print();
+                  e.preventDefault();
+                  
+                  const element = document.getElementById('pdf-content');
+                  const originalText = btn.innerHTML;
+                  btn.innerHTML = '⏳ Generando PDF...';
+
+                  // Load scripts sequentially
+                  const loadScript = (src) => new Promise((resolve, reject) => {
+                    if (document.querySelector(\`script[src="\${src}"]\`)) return resolve();
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.onload = resolve;
+                    s.onerror = reject;
+                    document.head.appendChild(s);
+                  });
+
+                  try {
+                    await loadScript('https://cdn.jsdelivr.net/npm/dom-to-image-more@3.2.0/dist/dom-to-image-more.min.js');
+                    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+
+                    // dom-to-image-more configuration
+                    const scale = 2;
+                    const style = {
+                      transform: 'scale(' + scale + ')',
+                      transformOrigin: 'top left',
+                      width: element.offsetWidth + 'px',
+                      height: element.offsetHeight + 'px'
+                    };
+                    const param = {
+                      height: element.offsetHeight * scale,
+                      width: element.offsetWidth * scale,
+                      quality: 1,
+                      style
+                    };
+
+                    const dataUrl = await window.domtoimage.toPng(element, param);
+                    
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = pdf.internal.pageSize.getHeight();
+                    const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+                    
+                    let heightLeft = pdfHeight;
+                    let position = 0;
+
+                    pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, pdfHeight);
+                    heightLeft -= pageHeight;
+
+                    while (heightLeft >= 0) {
+                      position = heightLeft - pdfHeight;
+                      pdf.addPage();
+                      pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, pdfHeight);
+                      heightLeft -= pageHeight;
+                    }
+
+                    pdf.save('Propuesta_Comercial_${opportunity.customer.name.replace(/\s+/g, '_')}.pdf');
+                    
+                    btn.innerHTML = originalText;
+                  } catch (error) {
+                    console.error(error);
+                    alert('Error al generar PDF: ' + (error.message || error));
+                    btn.innerHTML = originalText;
+                  }
                 }
               });
             `,
