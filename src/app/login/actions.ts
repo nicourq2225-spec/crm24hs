@@ -2,9 +2,31 @@
 
 import { cookies } from 'next/headers';
 
-export async function loginAction(userId: string) {
+const PASSWORDS: Record<string, string[]> = {
+  '1': ['NicolasUrquiza'],
+  '2': ['Kevin Cassar', 'KevinCassar'],
+  '3': ['NaaraCaselli'],
+  'admin': ['NahuelLaslo']
+};
+
+export async function loginAction(userId: string, password?: string) {
+  const allowedPasswords = PASSWORDS[userId];
+  if (!allowedPasswords) {
+    return { error: 'Usuario no válido' };
+  }
+  
+  if (!password || !allowedPasswords.includes(password)) {
+    return { error: 'Contraseña incorrecta' };
+  }
+
   const cookieStore = await cookies();
-  cookieStore.set('userId', userId, { secure: true, path: '/' });
+  cookieStore.set('userId', userId, { 
+    secure: process.env.NODE_ENV === 'production', 
+    path: '/', 
+    maxAge: 60 * 60 * 24 * 30 // 30 días
+  });
+  
+  return { success: true };
 }
 
 export async function logoutAction() {
